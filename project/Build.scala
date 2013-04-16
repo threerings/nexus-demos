@@ -12,7 +12,8 @@ object ReversiBuild extends Build {
     override val globalSettings = Seq(
       crossPaths    := false,
       javacOptions  ++= Seq("-Xlint", "-Xlint:-serial", "-source", "1.6", "-target", "1.6"),
-      javaOptions   ++= Seq("-ea"), // "-Xdebug", "-Xrunjdwp:transport=dt_socket,address=127.0.0.1:8888,server=y,suspend=y"),
+      javaOptions   ++= Seq("-ea"),
+      // "-Xdebug", "-Xrunjdwp:transport=dt_socket,address=127.0.0.1:8888,server=y,suspend=y"),
       fork in Compile := true,
       autoScalaLibrary in Compile := false // no scala-library dependency (except for tests)
     )
@@ -24,8 +25,7 @@ object ReversiBuild extends Build {
         )
       )
       case "java" => Revolver.settings ++ LWJGLPlugin.lwjglSettings
-      // case "server" => Revolver.settings ++ seq(
-      // )
+      case "server" => Revolver.settings // ++ seq()
       case _ => Nil
     }
   }
@@ -33,8 +33,8 @@ object ReversiBuild extends Build {
   lazy val assets = builder("assets")
   lazy val core   = builder("core")
   lazy val java   = builder("java")
-  // lazy val server = builder("server")
+  lazy val server = builder("server")
 
   // one giant fruit roll-up to bring them all together
-  lazy val d11s = Project("reversi", file(".")) aggregate(assets, core, java/*, server*/)
+  lazy val d11s = Project("reversi", file(".")) aggregate(assets, core, java, server)
 }

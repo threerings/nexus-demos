@@ -16,6 +16,9 @@ public class Reversi extends Game.Default {
   private static final int UPDATE_RATE = 33; // call update every 33ms (30 times per second)
   private final Clock.Source _clock = new Clock.Source(UPDATE_RATE);
 
+  /** The port on which the client connects to the server. */
+  public static final int PORT = 1234;
+
   public final NexusClient nexus;
   public final Clock clock = _clock;
   public final ScreenStack screens = new ScreenStack();

@@ -24,6 +24,7 @@
   <modules>
     <module>assets</module>
     <module>core</module>
+    <module>server</module>
   </modules>
 
   <profiles>
