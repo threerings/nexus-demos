@@ -4,6 +4,8 @@
 
 package com.threerings.reversi.java;
 
+import java.util.concurrent.Executor;
+
 import playn.core.PlayN;
 import playn.java.JavaPlatform;
 
@@ -14,8 +16,12 @@ public class ReversiJava {
 
   public static void main(String[] args) {
     JavaPlatform.Config config = new JavaPlatform.Config();
-    // use config to customize the Java platform, if needed
-    JavaPlatform.register(config);
-    PlayN.run(new Reversi(JVMClient.create(1234)));
+    final JavaPlatform platform = JavaPlatform.register(config);
+    Executor playnExec = new Executor() {
+      public void execute (Runnable r) {
+        platform.invokeLater(r);
+      }
+    };
+    PlayN.run(new Reversi(JVMClient.create(playnExec, 1234)));
   }
 }

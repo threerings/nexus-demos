@@ -5,10 +5,7 @@
 package com.threerings.reversi.core;
 
 import playn.core.Game;
-import playn.core.Image;
-import playn.core.ImageLayer;
 import playn.core.util.Clock;
-import static playn.core.PlayN.*;
 
 import com.threerings.nexus.client.NexusClient;
 
