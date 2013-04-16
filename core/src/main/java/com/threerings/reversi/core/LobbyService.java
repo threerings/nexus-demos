@@ -11,6 +11,9 @@ import com.threerings.nexus.util.Callback;
 /** Defines a simple lobby service. */
 public interface LobbyService extends NexusService {
 
+  /** Called when a player first enters the lobby. */
+  void hello ();
+
   /** Requests that our nickname be updated. */
   void updateNick (String nickname, Callback<Void> callback);
 

@@ -5,12 +5,18 @@
 package com.threerings.reversi.core;
 
 import tripleplay.game.UIScreen;
+import tripleplay.ui.Root;
 
-public class LobbyScreen extends UIScreen {
+public class LobbyScreen extends AbstractScreen {
 
   public LobbyScreen (Reversi game, LobbyObject lobobj) {
     _game = game;
     _lobobj = lobobj;
+    // let the lobby know that we're here
+    lobobj.lobbySvc.get().hello();
+  }
+
+  @Override protected void createIface (Root root) {
   }
 
   protected final Reversi _game;

@@ -4,9 +4,12 @@
 
 package com.threerings.reversi.server;
 
+import react.UnitSlot;
+
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.Nexus;
 import com.threerings.nexus.distrib.Singleton;
+import com.threerings.nexus.server.SessionLocal;
 import com.threerings.nexus.util.Callback;
 
 import com.threerings.reversi.core.Factory_LobbyService;
@@ -21,15 +24,39 @@ public class LobbyManager implements LobbyService, Singleton {
     _nexus = nexus;
     // register ourselves as a singleton
     nexus.registerSingleton(this);
-    // create and register our lobby object as a child singleton in our same context
-    LobbyObject lobj = new LobbyObject(Factory_LobbyService.createDispatcher(this));
-    nexus.registerSingleton(lobj, this);
+    // register our lobby object as a child singleton in our same context
+    nexus.registerSingleton(_lobj, this);
   }
 
-  @Override public void updateNick (String nickname, Callback<Void> callback) {
+  public void sendSysMsg (String message) {
+    _lobj.onChat.emit(new LobbyObject.ChatMessage(null, message));
+  }
+
+  @Override public void hello () {
+    // create this player's Player object
+    String ipAddr = SessionLocal.getSession().getIPAddress();
+    System.err.println("New player @" + ipAddr);
+    SessionLocal.set(Player.class, new Player(_nexus, "{anonymous@" + ipAddr + "}"));
+
+    // register a listener on this player's session to learn when they go away
+    SessionLocal.getSession().onDisconnect().connect(new UnitSlot() {
+      @Override public void onEmit () {
+        Player player = SessionLocal.get(Player.class);
+        sendSysMsg(player.nickname + " logged off.");
+      }
+    });
+  }
+
+  @Override public void updateNick (String newnick, Callback<Void> callback) {
+    Player player = SessionLocal.get(Player.class);
+    String onickname = player.nickname;
+    player.nickname = newnick;
+    sendSysMsg("<" + onickname + "> is now known as <" + newnick + ">");
   }
 
   @Override public void chat (String message) {
+    String speaker = SessionLocal.get(Player.class).nickname;
+    _lobj.onChat.emit(new LobbyObject.ChatMessage(speaker, message));
   }
 
   @Override public void play (Callback<Address<GameObject>> callback) {
@@ -39,4 +66,5 @@ public class LobbyManager implements LobbyService, Singleton {
   }
 
   protected final Nexus _nexus;
+  protected final LobbyObject _lobj = new LobbyObject(Factory_LobbyService.createDispatcher(this));
 }

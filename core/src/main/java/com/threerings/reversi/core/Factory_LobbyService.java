@@ -34,19 +34,22 @@ public class Factory_LobbyService implements ServiceFactory<LobbyService>
             @Override public void dispatchCall (short methodId, Object[] args) {
                 switch (methodId) {
                 case 1:
+                    service.hello();
+                    break;
+                case 2:
                     service.updateNick(
                         this.<String>cast(args[0]),
                         this.<Callback<Void>>cast(args[1]));
                     break;
-                case 2:
+                case 3:
                     service.chat(
                         this.<String>cast(args[0]));
                     break;
-                case 3:
+                case 4:
                     service.play(
                         this.<Callback<Address<GameObject>>>cast(args[0]));
                     break;
-                case 4:
+                case 5:
                     service.cancel();
                     break;
                 default:
@@ -64,17 +67,20 @@ public class Factory_LobbyService implements ServiceFactory<LobbyService>
         @Override public Class<LobbyService> getServiceClass () {
             return LobbyService.class;
         }
+        @Override public void hello () {
+            postCall((short)1);
+        }
         @Override public void updateNick (String nickname, Callback<Void> callback) {
-            postCall((short)1, nickname, callback);
+            postCall((short)2, nickname, callback);
         }
         @Override public void chat (String message) {
-            postCall((short)2, message);
+            postCall((short)3, message);
         }
         @Override public void play (Callback<Address<GameObject>> callback) {
-            postCall((short)3, callback);
+            postCall((short)4, callback);
         }
         @Override public void cancel () {
-            postCall((short)4);
+            postCall((short)5);
         }
     }
 }
