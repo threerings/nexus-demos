@@ -6,62 +6,69 @@ package com.threerings.reversi.core;
 
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.DService;
-import com.threerings.nexus.io.ServiceFactory;
+import com.threerings.nexus.distrib.NexusObject;
 import com.threerings.nexus.util.Callback;
 
 /**
  * Creates {@link LobbyService} marshaller instances.
  */
-public class Factory_LobbyService implements ServiceFactory<LobbyService>
+public class Factory_LobbyService implements DService.Factory<LobbyService>
 {
     @Override
-    public DService<LobbyService> createService ()
+    public DService<LobbyService> createService (NexusObject owner)
     {
-        return new Marshaller();
+        return new Marshaller(owner);
     }
 
-    public static DService<LobbyService> createDispatcher (final LobbyService service)
+    public static DService.Factory<LobbyService> createDispatcher (final LobbyService service)
     {
-        return new DService.Dispatcher<LobbyService>() {
-            @Override public LobbyService get () {
-                return service;
-            }
+        return new DService.Factory<LobbyService>() {
+            public DService<LobbyService> createService (NexusObject owner) {
+                return new DService.Dispatcher<LobbyService>(owner) {
+                    @Override public LobbyService get () {
+                        return service;
+                    }
 
-            @Override public Class<LobbyService> getServiceClass () {
-                return LobbyService.class;
-            }
+                    @Override public Class<LobbyService> getServiceClass () {
+                        return LobbyService.class;
+                    }
 
-            @Override public void dispatchCall (short methodId, Object[] args) {
-                switch (methodId) {
-                case 1:
-                    service.hello(
-                        this.<Callback<String>>cast(args[0]));
-                    break;
-                case 2:
-                    service.updateNick(
-                        this.<String>cast(args[0]),
-                        this.<Callback<Void>>cast(args[1]));
-                    break;
-                case 3:
-                    service.chat(
-                        this.<String>cast(args[0]));
-                    break;
-                case 4:
-                    service.play(
-                        this.<Callback<Address<GameObject>>>cast(args[0]));
-                    break;
-                case 5:
-                    service.cancel();
-                    break;
-                default:
-                    super.dispatchCall(methodId, args);
-                }
+                    @Override public void dispatchCall (short methodId, Object[] args) {
+                        switch (methodId) {
+                        case 1:
+                            service.hello(
+                                this.<Callback<String>>cast(args[0]));
+                            break;
+                        case 2:
+                            service.updateNick(
+                                this.<String>cast(args[0]),
+                                this.<Callback<Void>>cast(args[1]));
+                            break;
+                        case 3:
+                            service.chat(
+                                this.<String>cast(args[0]));
+                            break;
+                        case 4:
+                            service.play(
+                                this.<Callback<Address<GameObject>>>cast(args[0]));
+                            break;
+                        case 5:
+                            service.cancel();
+                            break;
+                        default:
+                            super.dispatchCall(methodId, args);
+                        }
+                    }
+                };
             }
         };
     }
 
     protected static class Marshaller extends DService<LobbyService> implements LobbyService
     {
+        public Marshaller (NexusObject owner) {
+            super(owner);
+        }
         @Override public LobbyService get () {
             return this;
         }

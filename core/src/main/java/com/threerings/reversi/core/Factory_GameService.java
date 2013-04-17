@@ -5,46 +5,53 @@
 package com.threerings.reversi.core;
 
 import com.threerings.nexus.distrib.DService;
-import com.threerings.nexus.io.ServiceFactory;
+import com.threerings.nexus.distrib.NexusObject;
 
 /**
  * Creates {@link GameService} marshaller instances.
  */
-public class Factory_GameService implements ServiceFactory<GameService>
+public class Factory_GameService implements DService.Factory<GameService>
 {
     @Override
-    public DService<GameService> createService ()
+    public DService<GameService> createService (NexusObject owner)
     {
-        return new Marshaller();
+        return new Marshaller(owner);
     }
 
-    public static DService<GameService> createDispatcher (final GameService service)
+    public static DService.Factory<GameService> createDispatcher (final GameService service)
     {
-        return new DService.Dispatcher<GameService>() {
-            @Override public GameService get () {
-                return service;
-            }
+        return new DService.Factory<GameService>() {
+            public DService<GameService> createService (NexusObject owner) {
+                return new DService.Dispatcher<GameService>(owner) {
+                    @Override public GameService get () {
+                        return service;
+                    }
 
-            @Override public Class<GameService> getServiceClass () {
-                return GameService.class;
-            }
+                    @Override public Class<GameService> getServiceClass () {
+                        return GameService.class;
+                    }
 
-            @Override public void dispatchCall (short methodId, Object[] args) {
-                switch (methodId) {
-                case 1:
-                    service.play(
-                        this.<Integer>cast(args[0]),
-                        this.<Integer>cast(args[1]));
-                    break;
-                default:
-                    super.dispatchCall(methodId, args);
-                }
+                    @Override public void dispatchCall (short methodId, Object[] args) {
+                        switch (methodId) {
+                        case 1:
+                            service.play(
+                                this.<Integer>cast(args[0]),
+                                this.<Integer>cast(args[1]));
+                            break;
+                        default:
+                            super.dispatchCall(methodId, args);
+                        }
+                    }
+                };
             }
         };
     }
 
     protected static class Marshaller extends DService<GameService> implements GameService
     {
+        public Marshaller (NexusObject owner) {
+            super(owner);
+        }
         @Override public GameService get () {
             return this;
         }

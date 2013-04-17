@@ -33,21 +33,9 @@ public class LobbyObject extends NexusObject implements Singleton {
   public final DService<LobbyService> lobbySvc;
 
   /** A signal emitted when a lobby occupant sends a chat message. */
-  public final DSignal<ChatMessage> onChat = DSignal.create();
+  public final DSignal<ChatMessage> onChat = DSignal.create(this);
 
-  public LobbyObject (DService<LobbyService> lobbySvc) {
-    this.lobbySvc = lobbySvc;
-  }
-
-  @Override protected DAttribute getAttribute (int index) {
-    switch (index) {
-    case 0: return lobbySvc;
-    case 1: return onChat;
-    default: throw new IndexOutOfBoundsException("Invalid attribute index " + index);
-    }
-  }
-
-  @Override protected int getAttributeCount () {
-    return 2;
+  public LobbyObject (DService.Factory<LobbyService> lobbySvc) {
+    this.lobbySvc = lobbySvc.createService(this);
   }
 }

@@ -27,31 +27,18 @@ public class GameObject extends NexusObject implements Keyed {
   public final DService<GameService> svc;
 
   /** The current state of the game. */
-  public DValue<State> state = DValue.create(State.PRE_GAME);
+  public DValue<State> state = DValue.create(this, State.PRE_GAME);
 
   /** The index of the current turn-holder. */
-  public DValue<Integer> turnHolder = DValue.create(-1);
+  public DValue<Integer> turnHolder = DValue.create(this, -1);
 
-  public GameObject (Integer gameId, String[] players, DService<GameService> svc) {
+  public GameObject (Integer gameId, String[] players, DService.Factory<GameService> svc) {
     this.gameId = gameId;
     this.players = players;
-    this.svc = svc;
+    this.svc = svc.createService(this);
   }
 
   @Override public Comparable<?> getKey () {
     return gameId;
-  }
-
-  @Override protected DAttribute getAttribute (int index) {
-    switch (index) {
-    case 0: return svc;
-    case 1: return state;
-    case 2: return turnHolder;
-    default: throw new IndexOutOfBoundsException("Invalid attribute index " + index);
-    }
-  }
-
-  @Override protected int getAttributeCount () {
-    return 3;
   }
 }
