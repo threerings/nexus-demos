@@ -27,7 +27,9 @@ public class Streamer_GameObject
     @Override
     public GameObject readObject (Streamable.Input in) {
         GameObject obj = new GameObject(
-            in.<Integer>readValue()
+            in.<Integer>readValue(),
+            in.readStrings(),
+            in.<GameService>readService()
         );
         obj.readContents(in);
         return obj;
@@ -35,5 +37,7 @@ public class Streamer_GameObject
 
     public static  void writeObjectImpl (Streamable.Output out, GameObject obj) {
         out.writeValue(obj.gameId);
+        out.writeStrings(obj.players);
+        out.writeService(obj.svc);
     }
 }
