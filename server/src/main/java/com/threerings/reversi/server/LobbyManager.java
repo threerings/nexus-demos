@@ -32,11 +32,11 @@ public class LobbyManager implements LobbyService, Singleton {
     _lobj.onChat.emit(new LobbyObject.ChatMessage(null, message));
   }
 
-  @Override public void hello () {
-    // create this player's Player object
-    String ipAddr = SessionLocal.getSession().getIPAddress();
-    System.err.println("New player @" + ipAddr);
-    SessionLocal.set(Player.class, new Player(_nexus, "{anonymous@" + ipAddr + "}"));
+  @Override public void hello (Callback<String> callback) {
+    // create this player's Player object and assign them a nick
+    String nick = "{anonymous@" + SessionLocal.getSession().getIPAddress() + "}";
+    System.err.println("Hello: " + nick);
+    SessionLocal.set(Player.class, new Player(_nexus, nick));
 
     // register a listener on this player's session to learn when they go away
     SessionLocal.getSession().onDisconnect().connect(new UnitSlot() {
@@ -45,6 +45,9 @@ public class LobbyManager implements LobbyService, Singleton {
         sendSysMsg(player.nickname + " logged off.");
       }
     });
+
+    // let the player know their auto-assigned nickname
+    callback.onSuccess(nick);
   }
 
   @Override public void updateNick (String newnick, Callback<Void> callback) {
@@ -52,6 +55,7 @@ public class LobbyManager implements LobbyService, Singleton {
     String onickname = player.nickname;
     player.nickname = newnick;
     sendSysMsg("<" + onickname + "> is now known as <" + newnick + ">");
+    callback.onSuccess(null);
   }
 
   @Override public void chat (String message) {

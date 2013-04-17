@@ -34,7 +34,8 @@ public class Factory_LobbyService implements ServiceFactory<LobbyService>
             @Override public void dispatchCall (short methodId, Object[] args) {
                 switch (methodId) {
                 case 1:
-                    service.hello();
+                    service.hello(
+                        this.<Callback<String>>cast(args[0]));
                     break;
                 case 2:
                     service.updateNick(
@@ -67,8 +68,8 @@ public class Factory_LobbyService implements ServiceFactory<LobbyService>
         @Override public Class<LobbyService> getServiceClass () {
             return LobbyService.class;
         }
-        @Override public void hello () {
-            postCall((short)1);
+        @Override public void hello (Callback<String> callback) {
+            postCall((short)1, callback);
         }
         @Override public void updateNick (String nickname, Callback<Void> callback) {
             postCall((short)2, nickname, callback);

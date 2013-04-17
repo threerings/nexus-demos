@@ -12,7 +12,7 @@ import com.threerings.nexus.util.Callback;
 public interface LobbyService extends NexusService {
 
   /** Called when a player first enters the lobby. */
-  void hello ();
+  void hello (Callback<String> callback);
 
   /** Requests that our nickname be updated. */
   void updateNick (String nickname, Callback<Void> callback);
