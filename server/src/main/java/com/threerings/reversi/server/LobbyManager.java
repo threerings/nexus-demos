@@ -73,9 +73,11 @@ public class LobbyManager implements LobbyService, Singleton {
       GameManager gmgr = new GameManager(_nexus, ++_nextGameId, new Player[] { _waiter, player });
       _waiterCallback.onSuccess(Address.of(gmgr.gameObj));
       callback.onSuccess(Address.of(gmgr.gameObj));
+      sendSysMsg(_waiter.nickname + " and " + player.nickname + " have started a game.");
       _waiter = null;
       _waiterCallback = null;
     } else {
+      sendSysMsg(player.nickname + " is ready to play.");
       _waiter = player;
       _waiterCallback = callback;
     }
@@ -87,6 +89,7 @@ public class LobbyManager implements LobbyService, Singleton {
       _log.warning("Got cancel from non-waiting player?", "who", player);
       return;
     }
+    sendSysMsg(player.nickname + " has decided not to play.");
     _waiterCallback.onSuccess(null);
     _waiter = null;
     _waiterCallback = null;

@@ -47,6 +47,7 @@ public class GameManager implements GameService, Keyed {
   }
 
   public void shutdown () {
+    if (gameObj.getId() == 0) return; // we already shutdown
     _nexus.clear(gameObj);
     _nexus.clearKeyed(this);
   }
