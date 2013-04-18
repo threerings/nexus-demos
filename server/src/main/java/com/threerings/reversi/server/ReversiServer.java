@@ -4,6 +4,7 @@
 
 package com.threerings.reversi.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -15,6 +16,7 @@ import com.threerings.nexus.server.NexusConfig;
 import com.threerings.nexus.server.NexusServer;
 
 import com.threerings.reversi.core.Reversi;
+import com.threerings.reversi.core.ReversiSerializer;
 
 /** The main entry point for the Reversi server. */
 public class ReversiServer {
@@ -34,14 +36,15 @@ public class ReversiServer {
     new LobbyManager(server);
 
     // set up a connection manager and listen on a port
-    final JVMConnectionManager jvmmgr = new JVMConnectionManager(server.getSessionManager());
+    JVMConnectionManager jvmmgr = new JVMConnectionManager(server.getSessionManager());
     jvmmgr.listen(config.publicHostname, Reversi.PORT);
     jvmmgr.start();
 
-    // // set up a Jetty instance and our GWTIO servlet
-    // final GWTConnectionManager gwtmgr = new GWTConnectionManager(
-    //   server.getSessionManager(), new ReversiSerializer(), config.publicHostname, 6502);
-    // gwtmgr.setDocRoot(new File("dist/webapp"));
-    // gwtmgr.start();
+    // set up a Jetty instance and our GWTIO servlet
+    GWTConnectionManager gwtmgr = new GWTConnectionManager(
+      server.getSessionManager(), new ReversiSerializer(), config.publicHostname, Reversi.WEB_PORT);
+    // this is a hack to allow us to serve up the HTML client directly
+    gwtmgr.setDocRoot(new File("../html/target/reversi-html-1.0-SNAPSHOT"));
+    gwtmgr.start();
   }
 }

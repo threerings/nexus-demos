@@ -53,7 +53,7 @@ public class GameScreen extends AbstractScreen {
       new Group(new TableLayout(TableLayout.COL.alignRight(), TableLayout.COL.fixed(),
                                 TableLayout.COL.alignLeft())).add(
         playerIcon(0), new Label(obj.players[0]), turnIcon(0),
-        playerIcon(1), new Label(obj.players[1])), turnIcon(1),
+        playerIcon(1), new Label(obj.players[1]), turnIcon(1)),
       AxisLayout.stretch((Group)new ChatView(obj.onChat, _conns)),
       new Group(AxisLayout.horizontal(), Style.HALIGN.right).add(
         new ChatButton() { protected void sendChat (String msg) { obj.svc.get().chat(msg); }},

@@ -9,6 +9,6 @@ import playn.core.util.Callback;
 public abstract class PCallback<T> implements Callback<T> {
 
   public void onFailure (Throwable cause) {
-    cause.printStackTrace(System.err);
+    Log.log.warning(this + " failed.", cause);
   }
 }

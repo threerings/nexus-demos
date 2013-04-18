@@ -36,19 +36,19 @@ public class LobbyManager implements LobbyService, Singleton {
 
   @Override public void hello (Callback<String> callback) {
     // create this player's Player object and assign them a nick
-    String nick = "player" + (++_nextPlayerNo);
-    SessionLocal.set(Player.class, new Player(_nexus, nick));
+    final Player player = new Player(_nexus, "player" + (++_nextPlayerNo));
+    SessionLocal.set(Player.class, player);
 
     // register a listener on this player's session to learn when they go away
     SessionLocal.getSession().onDisconnect().connect(new UnitSlot() {
       @Override public void onEmit () {
-        Player player = SessionLocal.get(Player.class);
         sendSysMsg(player.nickname + " logged off.");
       }
     });
 
     // let the player know their auto-assigned nickname
-    callback.onSuccess(nick);
+    callback.onSuccess(player.nickname);
+    sendSysMsg(player.nickname + " logged on.");
   }
 
   @Override public void updateNick (String newnick, Callback<Void> callback) {

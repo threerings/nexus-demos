@@ -16,6 +16,6 @@ public abstract class NCallback<T> implements Callback<T> {
   }
 
   public void onFailure (Throwable cause) {
-    cause.printStackTrace(System.err);
+    Log.log.warning(this + " failed.", cause);
   }
 }

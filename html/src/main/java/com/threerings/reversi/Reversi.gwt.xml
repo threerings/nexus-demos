@@ -1,5 +1,7 @@
 <module rename-to='reversi'>
   <inherits name='playn.PlayN'/>
+  <inherits name='tripleplay.TriplePlay'/>
+  <inherits name="com.threerings.nexus.GWTIO"/>
   <inherits name='ReversiAssets'/>
 
   <source path='core'/>
@@ -8,4 +10,8 @@
   <public path="resources" />
 
   <entry-point class='com.threerings.reversi.html.ReversiHtml'/>
+
+  <!-- super devmode -->
+  <add-linker name="xsiframe"/>
+  <set-configuration-property name="devModeRedirectEnabled" value="true"/>
 </module>

@@ -8,7 +8,10 @@ import playn.core.PlayN;
 import playn.html.HtmlGame;
 import playn.html.HtmlPlatform;
 
+import com.threerings.nexus.client.GWTClient;
+
 import com.threerings.reversi.core.Reversi;
+import com.threerings.reversi.core.ReversiSerializer;
 
 public class ReversiHtml extends HtmlGame {
 
@@ -18,6 +21,6 @@ public class ReversiHtml extends HtmlGame {
     // use config to customize the HTML platform, if needed
     HtmlPlatform platform = HtmlPlatform.register(config);
     platform.assets().setPathPrefix("reversi/");
-    PlayN.run(new Reversi());
+    PlayN.run(new Reversi(GWTClient.create(Reversi.WEB_PORT, new ReversiSerializer())));
   }
 }
