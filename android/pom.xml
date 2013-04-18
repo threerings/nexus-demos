@@ -35,6 +35,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.threerings.nexus</groupId>
+      <artifactId>nexus-jvm-io</artifactId>
+      <version>${nexus.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.googlecode.playn</groupId>
       <artifactId>playn-android-nativelib</artifactId>
       <version>1.0</version>
