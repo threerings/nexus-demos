@@ -4,21 +4,36 @@
 
 package com.threerings.reversi.core;
 
+import react.RSet;
+
 import com.threerings.nexus.distrib.DAttribute;
+import com.threerings.nexus.distrib.DMap;
 import com.threerings.nexus.distrib.DService;
 import com.threerings.nexus.distrib.DValue;
-import com.threerings.nexus.distrib.Keyed;
 import com.threerings.nexus.distrib.NexusObject;
+import com.threerings.nexus.io.Streamable;
 
-public class GameObject extends NexusObject implements Keyed {
+public class GameObject extends NexusObject {
 
   /** Tracks the state of the game. */
   public static enum State {
     PRE_GAME, IN_PLAY, GAME_OVER;
   }
 
-  /** A unique id assigned to this game. */
-  public final Integer gameId;
+  /** Encapsulates a board coordinate. */
+  public static class Coord implements Streamable {
+    public final int x, y;
+    public Coord (int x, int y) {
+      this.x = x;
+      this.y = y;
+    }
+
+    @Override public String toString () { return x + "/" + y; }
+    @Override public int hashCode () { return x ^ y; }
+    @Override public boolean equals (Object other) {
+      return (other instanceof Coord) && ((Coord)other).x == x &&  ((Coord)other).y == y;
+    }
+  }
 
   /** The names of the two players. */
   public final String[] players;
@@ -32,13 +47,11 @@ public class GameObject extends NexusObject implements Keyed {
   /** The index of the current turn-holder. */
   public DValue<Integer> turnHolder = DValue.create(this, -1);
 
-  public GameObject (Integer gameId, String[] players, DService.Factory<GameService> svc) {
-    this.gameId = gameId;
+  /** The current state of the board. A mapping from board coord to chip owner. */
+  public DMap<Coord,Integer> board = DMap.create(this);
+
+  public GameObject (String[] players, DService.Factory<GameService> svc) {
     this.players = players;
     this.svc = svc.createService(this);
-  }
-
-  @Override public Comparable<?> getKey () {
-    return gameId;
   }
 }

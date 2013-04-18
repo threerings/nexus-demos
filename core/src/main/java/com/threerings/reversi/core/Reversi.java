@@ -23,7 +23,7 @@ public class Reversi extends Game.Default {
   public final Clock clock = _clock;
   public final ScreenStack screens = new ScreenStack();
 
-  public Reversi(NexusClient nexus) {
+  public Reversi (NexusClient nexus) {
     super(UPDATE_RATE);
     this.nexus = nexus;
   }

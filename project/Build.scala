@@ -25,7 +25,9 @@ object ReversiBuild extends Build {
         )
       )
       case "java" => Revolver.settings ++ LWJGLPlugin.lwjglSettings
-      case "server" => Revolver.settings // ++ seq()
+      case "server" => Revolver.settings ++ seq(
+        fork in Test := true
+      )
       case _ => Nil
     }
   }

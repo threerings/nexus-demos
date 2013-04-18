@@ -31,6 +31,10 @@ public abstract class AbstractScreen extends UIScreen {
     _conns.disconnect();
   }
 
+  protected AbstractScreen (Reversi game) {
+    _game = game;
+  }
+
   protected Layout layout () {
     return AxisLayout.vertical().gap(10);
   }
@@ -41,6 +45,7 @@ public abstract class AbstractScreen extends UIScreen {
 
   protected abstract void createIface (Root root);
 
+  protected final Reversi _game;
   protected final ConnectionGroup _conns = new ConnectionGroup();
   protected Root _root;
 }

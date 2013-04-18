@@ -22,6 +22,6 @@ public class ReversiJava {
         platform.invokeLater(r);
       }
     };
-    PlayN.run(new Reversi(JVMClient.create(playnExec, Reversi.PORT)));
+    platform.run(new Reversi(JVMClient.create(playnExec, Reversi.PORT)));
   }
 }

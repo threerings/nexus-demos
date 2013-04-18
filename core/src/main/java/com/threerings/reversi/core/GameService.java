@@ -9,6 +9,12 @@ import com.threerings.nexus.distrib.NexusService;
 /** Defines actions taken by player in a game. */
 public interface GameService extends NexusService {
 
+  /** Lets the server know that we're here and ready to go. */
+  void readyToPlay ();
+
   /** Requests to make our move at the specified coordinates. */
   void play (int x, int y);
+
+  /** Called when the player leaves the game in an orderly manner. */
+  void byebye ();
 }

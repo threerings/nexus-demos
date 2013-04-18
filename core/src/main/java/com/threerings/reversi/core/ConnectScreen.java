@@ -16,7 +16,7 @@ import tripleplay.ui.Root;
 public class ConnectScreen extends AbstractScreen {
 
   public ConnectScreen (Reversi game) {
-    _game = game;
+    super(game);
   }
 
   @Override protected void createIface (Root root) {
@@ -26,8 +26,12 @@ public class ConnectScreen extends AbstractScreen {
       status.text.update("Connecting...");
       _game.nexus.subscribe(Address.create("localhost", LobbyObject.class),
                             new Callback<LobbyObject>() {
-                              public void onSuccess (LobbyObject lobobj) {
-                                _game.screens.push(new LobbyScreen(_game, lobobj));
+                              public void onSuccess (LobbyObject obj) {
+                                obj.onLost.connect(new UnitSlot() { public void onEmit () {
+                                  _showStatus = "Lost connection.";
+                                  _game.screens.popTo(ConnectScreen.this);
+                                }});
+                                _game.screens.push(new LobbyScreen(_game, obj));
                               }
                               public void onFailure (Throwable cause) {
                                 status.text.update("Connect failed: " + cause.getMessage());
@@ -40,10 +44,9 @@ public class ConnectScreen extends AbstractScreen {
     root.add(status, connect);
 
     // if this is the first time this screen is shown, auto-connect
-    if (_firstShow) onConnect.onEmit();
-    _firstShow = false;
+    if (_showStatus == null) onConnect.onEmit();
+    else status.text.update(_showStatus);
   }
 
-  protected final Reversi _game;
-  protected boolean _firstShow = true;
+  protected String _showStatus = null;
 }

@@ -5,6 +5,7 @@
 package com.threerings.reversi.server;
 
 import react.UnitSlot;
+import tripleplay.util.Logger;
 
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.Nexus;
@@ -34,8 +35,7 @@ public class LobbyManager implements LobbyService, Singleton {
 
   @Override public void hello (Callback<String> callback) {
     // create this player's Player object and assign them a nick
-    String nick = "{anonymous@" + SessionLocal.getSession().getIPAddress() + "}";
-    System.err.println("Hello: " + nick);
+    String nick = "player" + (++_nextPlayerNo);
     SessionLocal.set(Player.class, new Player(_nexus, nick));
 
     // register a listener on this player's session to learn when they go away
@@ -64,11 +64,40 @@ public class LobbyManager implements LobbyService, Singleton {
   }
 
   @Override public void play (Callback<Address<GameObject>> callback) {
+    Player player = SessionLocal.get(Player.class);
+    if (_waiter == player) {
+      _log.warning("Got play from already waiting player?", "who", player);
+      return;
+    }
+    if (_waiter != null) {
+      GameManager gmgr = new GameManager(_nexus, ++_nextGameId, new Player[] { _waiter, player });
+      _waiterCallback.onSuccess(Address.of(gmgr.gameObj));
+      callback.onSuccess(Address.of(gmgr.gameObj));
+      _waiter = null;
+      _waiterCallback = null;
+    } else {
+      _waiter = player;
+      _waiterCallback = callback;
+    }
   }
 
   @Override public void cancel () {
+    Player player = SessionLocal.get(Player.class);
+    if (_waiter != player) {
+      _log.warning("Got cancel from non-waiting player?", "who", player);
+      return;
+    }
+    _waiterCallback.onSuccess(null);
+    _waiter = null;
+    _waiterCallback = null;
   }
 
+  protected final Logger _log = new Logger("lobby");
   protected final Nexus _nexus;
   protected final LobbyObject _lobj = new LobbyObject(Factory_LobbyService.createDispatcher(this));
+
+  protected int _nextPlayerNo = 0;
+  protected int _nextGameId = 0;
+  protected Player _waiter;
+  protected Callback<Address<GameObject>> _waiterCallback;
 }

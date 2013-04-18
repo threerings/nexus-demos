@@ -34,9 +34,15 @@ public class Factory_GameService implements DService.Factory<GameService>
                     @Override public void dispatchCall (short methodId, Object[] args) {
                         switch (methodId) {
                         case 1:
+                            service.readyToPlay();
+                            break;
+                        case 2:
                             service.play(
                                 this.<Integer>cast(args[0]),
                                 this.<Integer>cast(args[1]));
+                            break;
+                        case 3:
+                            service.byebye();
                             break;
                         default:
                             super.dispatchCall(methodId, args);
@@ -58,8 +64,14 @@ public class Factory_GameService implements DService.Factory<GameService>
         @Override public Class<GameService> getServiceClass () {
             return GameService.class;
         }
+        @Override public void readyToPlay () {
+            postCall((short)1);
+        }
         @Override public void play (int x, int y) {
-            postCall((short)1, x, y);
+            postCall((short)2, x, y);
+        }
+        @Override public void byebye () {
+            postCall((short)3);
         }
     }
 }
