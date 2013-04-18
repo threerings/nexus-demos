@@ -8,6 +8,8 @@ import react.UnitSlot;
 
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.util.Callback;
+import com.threerings.reversi.core.lobby.LobbyObject;
+import com.threerings.reversi.core.lobby.LobbyScreen;
 
 import tripleplay.ui.Button;
 import tripleplay.ui.Label;

@@ -2,7 +2,7 @@
 // Reversi - a simple game demonstrating the use of PlayN and Nexus together
 // https://github.com/threerings/reversi-playn
 
-package com.threerings.reversi.core;
+package com.threerings.reversi.core.game;
 
 import com.threerings.nexus.distrib.DService;
 import com.threerings.nexus.distrib.NexusObject;

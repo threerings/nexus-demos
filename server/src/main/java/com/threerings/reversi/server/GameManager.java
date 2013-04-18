@@ -18,9 +18,9 @@ import com.threerings.nexus.distrib.Keyed;
 import com.threerings.nexus.distrib.Nexus;
 import com.threerings.nexus.server.SessionLocal;
 
-import com.threerings.reversi.core.Factory_GameService;
-import com.threerings.reversi.core.GameObject;
-import com.threerings.reversi.core.GameService;
+import com.threerings.reversi.core.game.Factory_GameService;
+import com.threerings.reversi.core.game.GameObject;
+import com.threerings.reversi.core.game.GameService;
 
 /** Manages an individual game of Reversi. */
 public class GameManager implements GameService, Keyed {

@@ -6,7 +6,6 @@ package com.threerings.reversi.java;
 
 import java.util.concurrent.Executor;
 
-import playn.core.PlayN;
 import playn.java.JavaPlatform;
 
 import com.threerings.nexus.client.JVMClient;

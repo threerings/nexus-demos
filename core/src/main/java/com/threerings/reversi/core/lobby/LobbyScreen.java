@@ -2,18 +2,23 @@
 // Reversi - a simple game demonstrating the use of PlayN and Nexus together
 // https://github.com/threerings/reversi-playn
 
-package com.threerings.reversi.core;
+package com.threerings.reversi.core.lobby;
 
 import react.Slot;
-import react.UnitSlot;
 import react.Value;
 
 import playn.core.Keyboard;
 import static playn.core.PlayN.keyboard;
 
 import com.threerings.nexus.distrib.Address;
+import com.threerings.reversi.core.AbstractScreen;
+import com.threerings.reversi.core.NCallback;
+import com.threerings.reversi.core.PCallback;
+import com.threerings.reversi.core.Reversi;
+import com.threerings.reversi.core.UI;
+import com.threerings.reversi.core.game.GameObject;
+import com.threerings.reversi.core.game.GameScreen;
 
-import tripleplay.game.UIScreen;
 import tripleplay.ui.Background;
 import tripleplay.ui.Button;
 import tripleplay.ui.Group;

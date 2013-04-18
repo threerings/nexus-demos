@@ -2,11 +2,12 @@
 // Reversi - a simple game demonstrating the use of PlayN and Nexus together
 // https://github.com/threerings/reversi-playn
 
-package com.threerings.reversi.core;
+package com.threerings.reversi.core.lobby;
 
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.NexusService;
 import com.threerings.nexus.util.Callback;
+import com.threerings.reversi.core.game.GameObject;
 
 /** Defines a simple lobby service. */
 public interface LobbyService extends NexusService {

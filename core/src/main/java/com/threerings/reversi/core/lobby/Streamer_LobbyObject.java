@@ -2,7 +2,7 @@
 // Reversi - a simple game demonstrating the use of PlayN and Nexus together
 // https://github.com/threerings/reversi-playn
 
-package com.threerings.reversi.core;
+package com.threerings.reversi.core.lobby;
 
 import com.threerings.nexus.io.Streamable;
 import com.threerings.nexus.io.Streamer;

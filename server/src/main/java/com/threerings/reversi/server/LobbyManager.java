@@ -13,10 +13,10 @@ import com.threerings.nexus.distrib.Singleton;
 import com.threerings.nexus.server.SessionLocal;
 import com.threerings.nexus.util.Callback;
 
-import com.threerings.reversi.core.Factory_LobbyService;
-import com.threerings.reversi.core.GameObject;
-import com.threerings.reversi.core.LobbyObject;
-import com.threerings.reversi.core.LobbyService;
+import com.threerings.reversi.core.game.GameObject;
+import com.threerings.reversi.core.lobby.Factory_LobbyService;
+import com.threerings.reversi.core.lobby.LobbyObject;
+import com.threerings.reversi.core.lobby.LobbyService;
 
 /** Manages the server side of the Reversi lobby. */
 public class LobbyManager implements LobbyService, Singleton {
