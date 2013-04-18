@@ -17,6 +17,7 @@ import tripleplay.util.Logger;
 import com.threerings.nexus.distrib.Keyed;
 import com.threerings.nexus.distrib.Nexus;
 import com.threerings.nexus.server.SessionLocal;
+import com.threerings.nexus.util.Callback;
 
 import com.threerings.reversi.core.chat.ChatMessage;
 import com.threerings.reversi.core.game.Board;
@@ -24,6 +25,7 @@ import com.threerings.reversi.core.game.Coord;
 import com.threerings.reversi.core.game.Factory_GameService;
 import com.threerings.reversi.core.game.GameObject;
 import com.threerings.reversi.core.game.GameService;
+import com.threerings.reversi.core.game.Logic;
 
 /** Manages an individual game of Reversi. */
 public class GameManager implements GameService, Keyed {
@@ -59,10 +61,15 @@ public class GameManager implements GameService, Keyed {
     return gameId;
   }
 
-  @Override public void readyToPlay () {
+  @Override public void readyToPlay (Callback<Integer> callback) {
     Player player = SessionLocal.get(Player.class);
     if (gameObj.state.get() != GameObject.State.PRE_GAME) {
       _log.warning("Got readyToPlay, but it's not pre-game", "from", player);
+      return;
+    }
+    int idx = index(player);
+    if (idx == -1) {
+      _log.warning("Got readyToPlay from non-player", "from", player);
       return;
     }
 
@@ -70,41 +77,67 @@ public class GameManager implements GameService, Keyed {
     SessionLocal.getSession().onDisconnect().map(Functions.constant(player)).
       connect(playerLeft).holdWeakly();
 
-    // if this is a player, note that they're ready to play and maybe start the game
-    if (_players.containsKey(player)) {
-      _here.add(player);
-      if (_here.size() == _players.size()) {
-        gameObj.turnHolder.update(0);
-        int mid = Board.SIZE/2;
-        gameObj.board.put(new Coord(mid-1, mid-1), 0);
-        gameObj.board.put(new Coord(mid-1, mid), 1);
-        gameObj.board.put(new Coord(mid, mid-1), 1);
-        gameObj.board.put(new Coord(mid, mid), 0);
-        gameObj.state.update(GameObject.State.IN_PLAY);
-      }
+    // let the player know their index
+    callback.onSuccess(idx);
+
+    // note that they're ready to play and maybe start the game
+    _here.add(player);
+    if (_here.size() == _players.size()) {
+      gameObj.turnHolder.update(0);
+      int mid = Board.SIZE/2;
+      gameObj.board.put(new Coord(mid-1, mid-1), 0);
+      gameObj.board.put(new Coord(mid-1, mid), 1);
+      gameObj.board.put(new Coord(mid, mid-1), 1);
+      gameObj.board.put(new Coord(mid, mid), 0);
+      gameObj.state.update(GameObject.State.IN_PLAY);
     }
   }
 
-  @Override public void play (int x, int y) {
+  @Override public void play (Coord coord) {
     int thIdx = gameObj.turnHolder.get();
     Player player = SessionLocal.get(Player.class);
     if (thIdx < 0 || index(player) != thIdx) {
-      _log.warning("Got illegal play request", "from", player, "x", x, "y", y);
+      _log.warning("Got play from non-turnholder", "from", player, "at", coord, "th", thIdx);
       return;
     }
-    Coord c = new Coord(x, y);
-    if (gameObj.board.containsKey(c)) {
-      _log.warning("Got request to play on occupied spot", "from", player, "at", c,
-                   "owner", gameObj.board.get(c));
+    // double check that the play is legal (the client also checks)
+    if (!Logic.isLegalPlay(gameObj.board, thIdx, coord)) {
+      _log.warning("Got illegal play request", "from", player, "at", coord, "board", gameObj.board);
       return;
     }
 
-    // TODO: the flipping logic
-    gameObj.board.put(c, thIdx);
-    // TODO: check for winner
+    // apply the play, flipping the appropriate tiles
+    gameObj.board.put(coord, thIdx);
+    Logic.applyPlay(gameObj.board, thIdx, coord);
 
-    // advance to the other player's turn
-    gameObj.turnHolder.update(1-thIdx);
+    int nextThIdx = nextTurnHolder(thIdx);
+    gameObj.turnHolder.update(nextThIdx);
+
+    if (nextThIdx == thIdx) {
+      sendSysMsg(gameObj.players[1-thIdx] + " has no legal moves. Skipping their turn.");
+
+    } else if (nextThIdx == -1) {
+      // count up the tiles and declare a winner
+      int[] owned = new int[_players.size()];
+      for (int owner : gameObj.board.values()) owned[owner]++;
+      if (owned[0] == owned[1]) {
+        sendSysMsg("It's a tie!");
+      } else if (owned[0] > owned[1]) {
+        sendSysMsg(gameObj.players[0] + " wins!");
+      } else {
+        sendSysMsg(gameObj.players[1] + " wins!");
+      }
+      gameObj.state.update(GameObject.State.GAME_OVER);
+    }
+  }
+
+  protected int nextTurnHolder (int thIdx) {
+    // if the next player can move, they're up
+    if (Logic.hasLegalPlays(gameObj.board, 1-thIdx)) return 1-thIdx;
+    // otherwise see if the current player can still move
+    if (Logic.hasLegalPlays(gameObj.board, thIdx)) return thIdx;
+    // otherwise the game is over
+    return -1;
   }
 
   @Override public void chat (String message) {
@@ -113,7 +146,13 @@ public class GameManager implements GameService, Keyed {
   }
 
   @Override public void byebye () {
-    playerLeft.onEmit(SessionLocal.get(Player.class));
+    Player player = SessionLocal.get(Player.class);
+    if (_players.containsKey(player)) playerLeft.onEmit(player);
+    else _log.warning("Got byebye from non-player?", "from", player);
+  }
+
+  protected void sendSysMsg (String message) {
+      gameObj.onChat.emit(new ChatMessage(null, message));
   }
 
   protected int index (Player player) {
@@ -122,11 +161,9 @@ public class GameManager implements GameService, Keyed {
   }
 
   protected final Slot<Player> playerLeft = new Slot<Player>() { public void onEmit (Player player) {
-    if (_players.containsKey(player)) {
-      _here.remove(player);
-      // if all players have left, shut the game down
-      if (_here.size() == 0) shutdown();
-    }
+    if (_here.remove(player)) sendSysMsg(player.nickname + " left the game.");
+    // if all players have left, shut the game down
+    if (_here.size() == 0) shutdown();
   }};
 
   protected final Nexus _nexus;

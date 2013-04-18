@@ -6,6 +6,7 @@ package com.threerings.reversi.core.game;
 
 import com.threerings.nexus.distrib.DService;
 import com.threerings.nexus.distrib.NexusObject;
+import com.threerings.nexus.util.Callback;
 
 /**
  * Creates {@link GameService} marshaller instances.
@@ -34,12 +35,12 @@ public class Factory_GameService implements DService.Factory<GameService>
                     @Override public void dispatchCall (short methodId, Object[] args) {
                         switch (methodId) {
                         case 1:
-                            service.readyToPlay();
+                            service.readyToPlay(
+                                this.<Callback<Integer>>cast(args[0]));
                             break;
                         case 2:
                             service.play(
-                                this.<Integer>cast(args[0]),
-                                this.<Integer>cast(args[1]));
+                                this.<Coord>cast(args[0]));
                             break;
                         case 3:
                             service.chat(
@@ -68,11 +69,11 @@ public class Factory_GameService implements DService.Factory<GameService>
         @Override public Class<GameService> getServiceClass () {
             return GameService.class;
         }
-        @Override public void readyToPlay () {
-            postCall((short)1);
+        @Override public void readyToPlay (Callback<Integer> callback) {
+            postCall((short)1, callback);
         }
-        @Override public void play (int x, int y) {
-            postCall((short)2, x, y);
+        @Override public void play (Coord coord) {
+            postCall((short)2, coord);
         }
         @Override public void chat (String message) {
             postCall((short)3, message);

@@ -8,4 +8,6 @@ package com.threerings.reversi.core.game;
 public class Board {
 
   public static final int SIZE = 8;
+
+  public static final int[] COLOR = { 0xFFFFFFFF, 0xFF000000 };
 }

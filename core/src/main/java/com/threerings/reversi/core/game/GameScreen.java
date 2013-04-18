@@ -5,10 +5,14 @@
 package com.threerings.reversi.core.game;
 
 import react.Function;
+import react.Slot;
+
+import static playn.core.PlayN.graphics;
 
 import tripleplay.ui.Background;
 import tripleplay.ui.Button;
 import tripleplay.ui.Group;
+import tripleplay.ui.Icons;
 import tripleplay.ui.Label;
 import tripleplay.ui.Layout;
 import tripleplay.ui.Root;
@@ -18,6 +22,7 @@ import tripleplay.ui.layout.AxisLayout;
 import tripleplay.ui.layout.TableLayout;
 
 import com.threerings.reversi.core.AbstractScreen;
+import com.threerings.reversi.core.NCallback;
 import com.threerings.reversi.core.Reversi;
 import com.threerings.reversi.core.UI;
 import com.threerings.reversi.core.chat.ChatButton;
@@ -25,9 +30,17 @@ import com.threerings.reversi.core.chat.ChatView;
 
 public class GameScreen extends AbstractScreen {
 
+  public final GameObject obj;
+
   public GameScreen (Reversi game, GameObject obj) {
     super(game);
-    _obj = obj;
+    this.obj = obj;
+  }
+
+  void tileClicked (Coord coord) {
+    if (obj.turnHolder.get() == _ourIdx && Logic.isLegalPlay(obj.board, _ourIdx, coord)) {
+      obj.svc.get().play(coord);
+    }
   }
 
   @Override protected Layout layout () {
@@ -37,30 +50,39 @@ public class GameScreen extends AbstractScreen {
   @Override protected void createIface (Root root) {
     Group info = new Group(AxisLayout.vertical().offStretch().gap(10)).add(
       UI.headerLabel("Reversi"),
-      new Group(new TableLayout(TableLayout.COL.alignRight(), TableLayout.COL.alignLeft())).add(
-        playerIcon(0), new Label(_obj.players[0]),
-        playerIcon(1), new Label(_obj.players[1])),
-      AxisLayout.stretch((Group)new ChatView(_obj.onChat, _conns)),
+      new Group(new TableLayout(TableLayout.COL.alignRight(), TableLayout.COL.fixed(),
+                                TableLayout.COL.alignLeft())).add(
+        playerIcon(0), new Label(obj.players[0]), turnIcon(0),
+        playerIcon(1), new Label(obj.players[1])), turnIcon(1),
+      AxisLayout.stretch((Group)new ChatView(obj.onChat, _conns)),
       new Group(AxisLayout.horizontal(), Style.HALIGN.right).add(
-        new ChatButton() { protected void sendChat (String msg) { _obj.svc.get().chat(msg); }},
+        new ChatButton() { protected void sendChat (String msg) { obj.svc.get().chat(msg); }},
         new Button("Quit") { public void click () { onQuit(); }}));
 
-    root.add(new Group(AxisLayout.vertical()).add(new BoardView(_obj)),
+    root.add(new Group(AxisLayout.vertical()).add(new BoardView(this)),
              AxisLayout.stretch(info));
 
-    _obj.svc.get().readyToPlay();
+    obj.svc.get().readyToPlay(new NCallback<Integer>() {
+      public void onSuccess (Integer ourIdx) {
+        _ourIdx = ourIdx;
+      }
+    });
   }
 
-  protected ValueLabel playerIcon (final int index) {
-    return new ValueLabel(_obj.turnHolder.map(new Function<Integer,String>() {
+  protected Label playerIcon (final int index) {
+    return new Label(Icons.image(BoardView.makeImage(index, 20)));
+  }
+
+  protected ValueLabel turnIcon (final int index) {
+    return new ValueLabel(obj.turnHolder.map(new Function<Integer,String>() {
       public String apply (Integer thIdx) { return thIdx == index ? "\u2605" : ""; }
     }));
   }
 
   protected void onQuit () {
-    _obj.svc.get().byebye();
+    obj.svc.get().byebye();
     _game.screens.remove(this);
   }
 
-  protected final GameObject _obj;
+  protected int _ourIdx;
 }

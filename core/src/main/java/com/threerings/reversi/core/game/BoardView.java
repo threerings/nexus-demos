@@ -7,11 +7,14 @@ package com.threerings.reversi.core.game;
 import java.util.HashMap;
 import java.util.Map;
 
+import pythagoras.f.MathUtil;
+
 import com.threerings.nexus.distrib.DMap;
 
 import playn.core.CanvasImage;
 import playn.core.ImageLayer;
 import playn.core.ImmediateLayer;
+import playn.core.Pointer;
 import playn.core.Surface;
 import static playn.core.PlayN.graphics;
 
@@ -22,8 +25,10 @@ public class BoardView extends SizableWidget<BoardView> {
 
   public static final int SQ_SIZE = 50;
 
-  public BoardView (GameObject obj) {
+  public BoardView (GameScreen game) {
     super(SQ_SIZE*Board.SIZE, SQ_SIZE*Board.SIZE);
+    enableInteraction();
+    _game = game;
 
     // add an immediate layer that draws our board
     layer.add(graphics().createImmediateLayer(new ImmediateLayer.Renderer() {
@@ -40,14 +45,14 @@ public class BoardView extends SizableWidget<BoardView> {
     }));
 
     // add the current pieces, and listen to obj.board for piece additions/updates
-    for (Map.Entry<Coord,Integer> entry : obj.board.entrySet()) {
-      addChip(entry.getKey()).setImage(makeImage(entry.getValue()));
+    for (Map.Entry<Coord,Integer> entry : _game.obj.board.entrySet()) {
+      addChip(entry.getKey()).setImage(makeImage(entry.getValue(), SQ_SIZE));
     }
-    obj.board.connect(new DMap.Listener<Coord,Integer>() {
+    _game.obj.board.connect(new DMap.Listener<Coord,Integer>() {
       public void onPut (Coord coord, Integer pidx) {
         ImageLayer chip = _chips.get(coord);
         if (chip == null) chip = addChip(coord);
-        chip.setImage(makeImage(pidx));
+        chip.setImage(makeImage(pidx, SQ_SIZE));
       }
       // no onRemove: chips are never removed
     });
@@ -57,6 +62,10 @@ public class BoardView extends SizableWidget<BoardView> {
     return BoardView.class;
   }
 
+  @Override protected void onPointerStart (Pointer.Event event, float x, float y) {
+    _game.tileClicked(new Coord(MathUtil.ifloor(x / SQ_SIZE), MathUtil.ifloor(y / SQ_SIZE)));
+  }
+
   protected ImageLayer addChip (Coord coord) {
     ImageLayer chip = graphics().createImageLayer();
     layer.addAt(chip, SQ_SIZE*coord.x, SQ_SIZE*coord.y);
@@ -64,13 +73,14 @@ public class BoardView extends SizableWidget<BoardView> {
     return chip;
   }
 
-  protected CanvasImage makeImage (int pidx) {
-    CanvasImage image = graphics().createImage(SQ_SIZE, SQ_SIZE);
-    int mid = SQ_SIZE/2;
-    image.canvas().setFillColor(pidx == 0 ? 0xFF000000 : 0xFFFFFFFF).fillCircle(mid-1, mid, mid-1);
-    image.canvas().setStrokeColor(0xFF000000).strokeCircle(mid-1, mid, mid-1);
+  protected static CanvasImage makeImage (int pidx, float size) {
+    CanvasImage image = graphics().createImage(size, size);
+    float mid = size/2;
+    image.canvas().setFillColor(Board.COLOR[pidx]).fillCircle(mid-1, mid, mid-1);
+    image.canvas().setStrokeColor(0xFF666666).strokeCircle(mid-1, mid, mid-1);
     return image;
   }
 
-  protected Map<Coord,ImageLayer> _chips = new HashMap<Coord,ImageLayer>();
+  protected final Map<Coord,ImageLayer> _chips = new HashMap<Coord,ImageLayer>();
+  protected final GameScreen _game;
 }

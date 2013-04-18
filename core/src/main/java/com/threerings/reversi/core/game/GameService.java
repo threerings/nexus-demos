@@ -5,15 +5,16 @@
 package com.threerings.reversi.core.game;
 
 import com.threerings.nexus.distrib.NexusService;
+import com.threerings.nexus.util.Callback;
 
 /** Defines actions taken by player in a game. */
 public interface GameService extends NexusService {
 
   /** Lets the server know that we're here and ready to go. */
-  void readyToPlay ();
+  void readyToPlay (Callback<Integer> callback);
 
   /** Requests to make our move at the specified coordinates. */
-  void play (int x, int y);
+  void play (Coord coord);
 
   /** Sends a chat message to the game. */
   void chat (String message);
