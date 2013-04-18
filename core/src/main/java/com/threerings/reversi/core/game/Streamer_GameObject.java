@@ -13,36 +13,6 @@ import com.threerings.nexus.io.Streamer;
 public class Streamer_GameObject
     implements Streamer<GameObject>
 {
-    /**
-     * Handles the streaming of {@link GameObject.Coord} instances.
-     */
-    public static class Coord
-        implements Streamer<GameObject.Coord>
-    {
-        @Override
-        public Class<?> getObjectClass () {
-            return GameObject.Coord.class;
-        }
-
-        @Override
-        public void writeObject (Streamable.Output out, GameObject.Coord obj) {
-            writeObjectImpl(out, obj);
-        }
-
-        @Override
-        public GameObject.Coord readObject (Streamable.Input in) {
-            return new GameObject.Coord(
-                in.readInt(),
-                in.readInt()
-            );
-        }
-
-        public static  void writeObjectImpl (Streamable.Output out, GameObject.Coord obj) {
-            out.writeInt(obj.x);
-            out.writeInt(obj.y);
-        }
-    }
-
     @Override
     public Class<?> getObjectClass () {
         return GameObject.class;

@@ -13,36 +13,6 @@ import com.threerings.nexus.io.Streamer;
 public class Streamer_LobbyObject
     implements Streamer<LobbyObject>
 {
-    /**
-     * Handles the streaming of {@link LobbyObject.ChatMessage} instances.
-     */
-    public static class ChatMessage
-        implements Streamer<LobbyObject.ChatMessage>
-    {
-        @Override
-        public Class<?> getObjectClass () {
-            return LobbyObject.ChatMessage.class;
-        }
-
-        @Override
-        public void writeObject (Streamable.Output out, LobbyObject.ChatMessage obj) {
-            writeObjectImpl(out, obj);
-        }
-
-        @Override
-        public LobbyObject.ChatMessage readObject (Streamable.Input in) {
-            return new LobbyObject.ChatMessage(
-                in.readString(),
-                in.readString()
-            );
-        }
-
-        public static  void writeObjectImpl (Streamable.Output out, LobbyObject.ChatMessage obj) {
-            out.writeString(obj.sender);
-            out.writeString(obj.message);
-        }
-    }
-
     @Override
     public Class<?> getObjectClass () {
         return LobbyObject.class;

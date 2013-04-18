@@ -15,6 +15,9 @@ public interface GameService extends NexusService {
   /** Requests to make our move at the specified coordinates. */
   void play (int x, int y);
 
+  /** Sends a chat message to the game. */
+  void chat (String message);
+
   /** Called when the player leaves the game in an orderly manner. */
   void byebye ();
 }

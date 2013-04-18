@@ -10,23 +10,10 @@ import com.threerings.nexus.distrib.NexusObject;
 import com.threerings.nexus.distrib.Singleton;
 import com.threerings.nexus.io.Streamable;
 
+import com.threerings.reversi.core.chat.ChatMessage;
+
 /** A singleton that provides access to lobby services. */
 public class LobbyObject extends NexusObject implements Singleton {
-
-  /** Encapsulates the info in a chat message. */
-  public static class ChatMessage implements Streamable {
-
-    /** The nickname of the sender, or null if this is a system message. */
-    public final String sender;
-
-    /** The text of the message. */
-    public final String message;
-
-    public ChatMessage (String sender, String message) {
-      this.sender = sender;
-      this.message = message;
-    }
-  }
 
   /** Provides global lobby services. */
   public final DService<LobbyService> lobbySvc;

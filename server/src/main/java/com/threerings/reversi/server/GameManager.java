@@ -18,6 +18,9 @@ import com.threerings.nexus.distrib.Keyed;
 import com.threerings.nexus.distrib.Nexus;
 import com.threerings.nexus.server.SessionLocal;
 
+import com.threerings.reversi.core.chat.ChatMessage;
+import com.threerings.reversi.core.game.Board;
+import com.threerings.reversi.core.game.Coord;
 import com.threerings.reversi.core.game.Factory_GameService;
 import com.threerings.reversi.core.game.GameObject;
 import com.threerings.reversi.core.game.GameService;
@@ -72,6 +75,11 @@ public class GameManager implements GameService, Keyed {
       _here.add(player);
       if (_here.size() == _players.size()) {
         gameObj.turnHolder.update(0);
+        int mid = Board.SIZE/2;
+        gameObj.board.put(new Coord(mid-1, mid-1), 0);
+        gameObj.board.put(new Coord(mid-1, mid), 1);
+        gameObj.board.put(new Coord(mid, mid-1), 1);
+        gameObj.board.put(new Coord(mid, mid), 0);
         gameObj.state.update(GameObject.State.IN_PLAY);
       }
     }
@@ -84,7 +92,7 @@ public class GameManager implements GameService, Keyed {
       _log.warning("Got illegal play request", "from", player, "x", x, "y", y);
       return;
     }
-    GameObject.Coord c = new GameObject.Coord(x, y);
+    Coord c = new Coord(x, y);
     if (gameObj.board.containsKey(c)) {
       _log.warning("Got request to play on occupied spot", "from", player, "at", c,
                    "owner", gameObj.board.get(c));
@@ -97,6 +105,11 @@ public class GameManager implements GameService, Keyed {
 
     // advance to the other player's turn
     gameObj.turnHolder.update(1-thIdx);
+  }
+
+  @Override public void chat (String message) {
+    String speaker = SessionLocal.get(Player.class).nickname;
+    gameObj.onChat.emit(new ChatMessage(speaker, message));
   }
 
   @Override public void byebye () {

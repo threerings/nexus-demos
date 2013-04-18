@@ -11,13 +11,6 @@ import playn.core.Keyboard;
 import static playn.core.PlayN.keyboard;
 
 import com.threerings.nexus.distrib.Address;
-import com.threerings.reversi.core.AbstractScreen;
-import com.threerings.reversi.core.NCallback;
-import com.threerings.reversi.core.PCallback;
-import com.threerings.reversi.core.Reversi;
-import com.threerings.reversi.core.UI;
-import com.threerings.reversi.core.game.GameObject;
-import com.threerings.reversi.core.game.GameScreen;
 
 import tripleplay.ui.Background;
 import tripleplay.ui.Button;
@@ -29,6 +22,16 @@ import tripleplay.ui.Shim;
 import tripleplay.ui.Style;
 import tripleplay.ui.ValueLabel;
 import tripleplay.ui.layout.AxisLayout;
+
+import com.threerings.reversi.core.AbstractScreen;
+import com.threerings.reversi.core.NCallback;
+import com.threerings.reversi.core.PCallback;
+import com.threerings.reversi.core.Reversi;
+import com.threerings.reversi.core.UI;
+import com.threerings.reversi.core.chat.ChatButton;
+import com.threerings.reversi.core.chat.ChatView;
+import com.threerings.reversi.core.game.GameObject;
+import com.threerings.reversi.core.game.GameScreen;
 
 public class LobbyScreen extends AbstractScreen {
 
@@ -48,52 +51,35 @@ public class LobbyScreen extends AbstractScreen {
   }
 
   @Override protected void createIface (Root root) {
-    final Group messages = new Group(AxisLayout.vertical(), Style.HALIGN.left, Style.VALIGN.bottom,
-                                     Style.BACKGROUND.is(Background.solid(0xFFEEEEEE).inset(5))) {
-      protected void layout () {
-        super.layout();
-        // lop off chat messages that no longer fit on-screen; hack!
-        while (childCount() > 0 && childAt(0).y() < 0) {
-          removeAt(0);
-        }
-      }
-    };
-    _root.add(UI.headerLabel("Lobby"),
-              new Group(AxisLayout.horizontal()).add(
-                new Label("Nickname:"),
-                new ValueLabel(_nickname),
-                new Button("Change") { public void click () {
-                  keyboard().getText(Keyboard.TextType.DEFAULT, "New nickname:",
-                                     _nickname.get(), gotNick);
-                }},
-                new Shim(20, 1),
-                new Label("Play:"),
-                new Button("Play") {
-                  public void click () {
-                    if (!_pending) {
-                      _obj.lobbySvc.get().play(onPlay);
-                      text.update("Cancel");
-                    } else {
-                      _obj.lobbySvc.get().cancel();
-                      text.update("Play");
-                    }
-                    _pending = !_pending;
-                  }
-                  protected boolean _pending;
-                }),
-              AxisLayout.stretch(messages),
-              new Group(AxisLayout.horizontal(), Style.HALIGN.right).add(
-                new Button("Chat") { public void click () {
-                  keyboard().getText(Keyboard.TextType.DEFAULT, "Enter message:", "", gotChat);
-                }}));
-
-    noteConnection(_obj.onChat.connect(new Slot<LobbyObject.ChatMessage>() {
-      public void onEmit (LobbyObject.ChatMessage msg) {
-        Label label = new Label(msg.sender == null ? msg.message :
-                                "<" + msg.sender + ">: " + msg.message);
-        messages.add(label.addStyles(Style.TEXT_WRAP.on, Style.HALIGN.left));
-      }
-    }));
+    _root.add(
+      UI.headerLabel("Lobby"),
+      new Group(AxisLayout.horizontal()).add(
+        new Label("Nickname:"),
+        new ValueLabel(_nickname),
+        new Button("Change") { public void click () {
+          keyboard().getText(Keyboard.TextType.DEFAULT, "New nickname:",
+                             _nickname.get(), gotNick);
+        }},
+        new Shim(20, 1),
+        new Label("Play:"),
+        new Button("Play") {
+          public void click () {
+            if (!_pending) {
+              _obj.lobbySvc.get().play(onPlay);
+              text.update("Cancel");
+            } else {
+              _obj.lobbySvc.get().cancel();
+              text.update("Play");
+            }
+            _pending = !_pending;
+          }
+          protected boolean _pending;
+        }),
+      AxisLayout.stretch((Group)new ChatView(_obj.onChat, _conns)),
+      new Group(AxisLayout.horizontal(), Style.HALIGN.right).add(
+        new ChatButton() {
+          protected void sendChat (String msg) { _obj.lobbySvc.get().chat(msg); }
+        }));
   }
 
   protected final PCallback<String> gotNick = new PCallback<String>() {
@@ -104,13 +90,6 @@ public class LobbyScreen extends AbstractScreen {
           _nickname.update(newnick);
         }
       });
-    }
-  };
-
-  protected final PCallback<String> gotChat = new PCallback<String>() {
-    public void onSuccess (final String msg) {
-      if (msg == null || msg.length() == 0) return;
-      _obj.lobbySvc.get().chat(msg);
     }
   };
 

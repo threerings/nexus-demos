@@ -42,6 +42,10 @@ public class Factory_GameService implements DService.Factory<GameService>
                                 this.<Integer>cast(args[1]));
                             break;
                         case 3:
+                            service.chat(
+                                this.<String>cast(args[0]));
+                            break;
+                        case 4:
                             service.byebye();
                             break;
                         default:
@@ -70,8 +74,11 @@ public class Factory_GameService implements DService.Factory<GameService>
         @Override public void play (int x, int y) {
             postCall((short)2, x, y);
         }
+        @Override public void chat (String message) {
+            postCall((short)3, message);
+        }
         @Override public void byebye () {
-            postCall((short)3);
+            postCall((short)4);
         }
     }
 }

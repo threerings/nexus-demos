@@ -13,6 +13,7 @@ import com.threerings.nexus.distrib.Singleton;
 import com.threerings.nexus.server.SessionLocal;
 import com.threerings.nexus.util.Callback;
 
+import com.threerings.reversi.core.chat.ChatMessage;
 import com.threerings.reversi.core.game.GameObject;
 import com.threerings.reversi.core.lobby.Factory_LobbyService;
 import com.threerings.reversi.core.lobby.LobbyObject;
@@ -30,7 +31,7 @@ public class LobbyManager implements LobbyService, Singleton {
   }
 
   public void sendSysMsg (String message) {
-    _lobj.onChat.emit(new LobbyObject.ChatMessage(null, message));
+    _lobj.onChat.emit(new ChatMessage(null, message));
   }
 
   @Override public void hello (Callback<String> callback) {
@@ -60,7 +61,7 @@ public class LobbyManager implements LobbyService, Singleton {
 
   @Override public void chat (String message) {
     String speaker = SessionLocal.get(Player.class).nickname;
-    _lobj.onChat.emit(new LobbyObject.ChatMessage(speaker, message));
+    _lobj.onChat.emit(new ChatMessage(speaker, message));
   }
 
   @Override public void play (Callback<Address<GameObject>> callback) {
