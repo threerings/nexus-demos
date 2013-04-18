@@ -13,6 +13,11 @@
   <packaging>jar</packaging>
   <name>Reversi Server</name>
 
+  <properties>
+    <mainClass>com.threerings.reversi.server.ReversiServer</mainClass>
+    <jetty.version>7.6.9.v20130131</jetty.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.threerings</groupId>
@@ -31,8 +36,43 @@
       <artifactId>nexus-gwt-server</artifactId>
       <version>${nexus.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-websocket</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
+    <plugins>
+      <!-- allows testing of server via: mvn -Pserver test -->
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <configuration>
+              <target>
+                <java fork="true" classname="${mainClass}" classpathref="maven.test.classpath">
+                  <sysproperty key="java.library.path" value="target/natives"/>
+                  <arg value="${scaleFactor}"/>
+                </java>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 </project>

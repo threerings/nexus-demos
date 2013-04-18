@@ -24,7 +24,6 @@
   <modules>
     <module>assets</module>
     <module>core</module>
-    <module>server</module>
   </modules>
 
   <profiles>
@@ -32,6 +31,10 @@
       <id>java</id>
       <activation><activeByDefault>true</activeByDefault></activation>
       <modules><module>java</module></modules>
+    </profile>
+    <profile>
+      <id>server</id>
+      <modules><module>server</module></modules>
     </profile>
     <profile>
       <id>android</id>
