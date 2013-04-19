@@ -1,7 +1,7 @@
 # Reversi
 
-This project demonstrates the integration of [PlayN] (a cross-platform game toolkit) and [Nexus] (a
-cross-platform networking toolkit). It implements a very simple multiplayer lobby and Reversi game.
+This project demonstrates the integration of [PlayN], a cross-platform game toolkit, and [Nexus], a
+cross-platform networking toolkit. It implements a very simple multiplayer lobby and Reversi game.
 Neither are especially sophisticated, but they serve their primary purpose, which is to illustrate
 the various bits of glue that are needed to make PlayN and Nexus play nicely together.
 
