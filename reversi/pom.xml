@@ -18,7 +18,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <guava.version>10.0.1</guava.version>
     <playn.version>1.7</playn.version>
-    <nexus.version>1.0-SNAPSHOT</nexus.version>
+    <nexus.version>1.0</nexus.version>
   </properties>
 
   <modules>

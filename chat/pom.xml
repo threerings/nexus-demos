@@ -11,7 +11,7 @@
 
   <properties>
     <gwt.version>2.5.0</gwt.version>
-    <nexus.version>1.0-SNAPSHOT</nexus.version>
+    <nexus.version>1.0</nexus.version>
     <jetty.version>7.6.9.v20130131</jetty.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
