@@ -30,5 +30,10 @@ combination of both. Go crazy!
 You can in theory also build the iOS and Android clients, though to get them to connect to the
 server, you'd need to have it listen on a proper IP address, rather than localhost.
 
+## Discuss
+
+Questions, comments and other communications can be expressed on the [PlayN Google Group].
+
 [PlayN]: https://code.google.com/p/playn/
 [Nexus]: https://github.com/threerings/nexus
+[PlayN Google Group]: http://groups.google.com/group/playn
