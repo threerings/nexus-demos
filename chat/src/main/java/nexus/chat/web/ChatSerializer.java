@@ -6,11 +6,9 @@ package nexus.chat.web;
 
 import com.threerings.nexus.io.AbstractSerializer;
 
-import nexus.chat.distrib.ChatObject;
 import nexus.chat.distrib.ChatService;
 import nexus.chat.distrib.Factory_ChatService;
 import nexus.chat.distrib.Factory_RoomService;
-import nexus.chat.distrib.RoomObject;
 import nexus.chat.distrib.RoomService;
 import nexus.chat.distrib.Streamer_ChatObject;
 import nexus.chat.distrib.Streamer_RoomObject;

@@ -11,8 +11,7 @@
 
   <properties>
     <gwt.version>2.5.0</gwt.version>
-    <nexus.version>1.0</nexus.version>
-    <jetty.version>7.6.9.v20130131</jetty.version>
+    <nexus.version>1.1-SNAPSHOT</nexus.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <client.class>nexus.chat.client.ChatApp</client.class>
@@ -49,18 +48,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-websocket</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8.1</version>
@@ -70,6 +57,20 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <fork>true</fork>
+          <showDeprecation>true</showDeprecation>
+          <showWarnings>true</showWarnings>
+          <!-- yes, those quoted spaces are a workaround sanctioned by the Maven idiocracy -->
+          <compilerArgument>-Xlint" "-Xlint:-serial" "-Xlint:-path</compilerArgument>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>gwt-maven-plugin</artifactId>
@@ -122,6 +123,14 @@
             <groupId>com.threerings.nexus</groupId>
             <artifactId>nexus-tools</artifactId>
             <version>${nexus.version}</version>
+          </dependency>
+          <!-- Maven runs Ant with the JRE as its home so we need this hackery -->
+          <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.6.0</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
           </dependency>
         </dependencies>
       </plugin>

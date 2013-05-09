@@ -19,9 +19,9 @@ import javax.swing.JTextField;
 
 import react.Slot;
 
-import com.threerings.nexus.distrib.Address;
-import com.threerings.nexus.util.Callback;
 import com.samskivert.swing.GroupLayout;
+import com.threerings.nexus.client.Subscriber;
+import com.threerings.nexus.util.Callback;
 
 import nexus.chat.distrib.ChatObject;
 import nexus.chat.distrib.RoomObject;
@@ -168,9 +168,9 @@ public class ChatPanel extends JPanel
                 joinedRoom(room);
             }
         };
-        _chatobj.chatSvc.get().joinRoom(
-            name, _ctx.getClient().subscriber(
-                callback(onJoin, "Failed to join room '" + name + "'")));
+        if (_sub != null) _sub.unsubscribe();
+        _sub = _ctx.getClient().subscriber(callback(onJoin, "Failed to join room '" + name + "'"));
+        _chatobj.chatSvc.get().joinRoom(name, _sub);
     }
 
     protected void createRoom (final String name) {
@@ -180,15 +180,13 @@ public class ChatPanel extends JPanel
                 refreshRooms();
             }
         };
-        _chatobj.chatSvc.get().createRoom(
-            name, _ctx.getClient().subscriber(
-                callback(onCreate, "Failed to create room '" + name + "'")));
+        if (_sub != null) _sub.unsubscribe();
+        _sub = _ctx.getClient().subscriber(
+            callback(onCreate, "Failed to create room '" + name + "'"));
+        _chatobj.chatSvc.get().createRoom(name, _sub);
     }
 
     protected void joinedRoom (RoomObject room) {
-        if (_roomobj != null) {
-            _ctx.getClient().unsubscribe(_roomobj);
-        }
         _roomobj = room;
         _roomobj.chatEvent.connect(new Slot<RoomObject.ChatEvent>() {
             public void onEmit (RoomObject.ChatEvent event) {
@@ -227,6 +225,7 @@ public class ChatPanel extends JPanel
     protected ChatContext _ctx;
     protected ChatObject _chatobj;
     protected RoomObject _roomobj;
+    protected Subscriber<RoomObject> _sub;
 
     protected JList _rooms;
     protected JLabel _curRoom;

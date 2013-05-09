@@ -17,7 +17,6 @@ import react.UnitSlot;
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.Nexus;
 import com.threerings.nexus.distrib.Singleton;
-import com.threerings.nexus.server.Session;
 import com.threerings.nexus.server.SessionLocal;
 import com.threerings.nexus.util.Callback;
 

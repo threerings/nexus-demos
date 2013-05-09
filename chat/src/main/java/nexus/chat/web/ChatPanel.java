@@ -15,16 +15,15 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import com.threerings.gwt.ui.EnterClickAdapter;
-import com.threerings.gwt.ui.FluentTable;
 import com.threerings.gwt.ui.Widgets;
 
 import react.Slot;
 
+import com.threerings.nexus.client.Subscriber;
 import com.threerings.nexus.util.Callback;
 
 import nexus.chat.distrib.ChatObject;
@@ -146,16 +145,14 @@ public class ChatPanel extends Composite
                 joinedRoom(room);
             }
         };
-        _chatobj.chatSvc.get().createRoom(
-            name, _ctx.getClient().subscriber(
-                callback(onCreate, "Failed to create room '" + name + "'")));
+        if (_sub != null) _sub.unsubscribe();
+        _sub = _ctx.getClient().subscriber(
+            callback(onCreate, "Failed to create room '" + name + "'"));
+        _chatobj.chatSvc.get().createRoom(name, _sub);
     }
 
     protected void joinedRoom (RoomObject room) {
         log.info("Joined room " + room.name);
-        if (_roomobj != null) {
-            _ctx.getClient().unsubscribe(_roomobj);
-        }
         _roomobj = room;
         _roomobj.chatEvent.connect(new Slot<RoomObject.ChatEvent>() {
             public void onEmit (RoomObject.ChatEvent event) {
@@ -204,6 +201,7 @@ public class ChatPanel extends Composite
     protected WebContext _ctx;
     protected ChatObject _chatobj;
     protected RoomObject _roomobj;
+    protected Subscriber<RoomObject> _sub;
 
     protected @UiField TextBox _nickname;
     protected @UiField Button _upnick;

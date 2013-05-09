@@ -4,7 +4,6 @@
 
 package nexus.chat.distrib;
 
-import com.threerings.nexus.distrib.DAttribute;
 import com.threerings.nexus.distrib.DService;
 import com.threerings.nexus.distrib.DSignal;
 import com.threerings.nexus.distrib.Keyed;
