@@ -55,43 +55,33 @@
           <execution>
             <id>attach-sources</id>
             <phase>generate-resources</phase>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
+            <goals><goal>jar-no-fork</goal></goals>
           </execution>
         </executions>
       </plugin>
+
+      <!-- handles auto-generation of Nexus code -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
+        <groupId>org.bsc.maven</groupId>
+        <artifactId>maven-processor-plugin</artifactId>
+        <version>2.2.1</version>
         <executions>
-          <!-- handles auto-generation of Nexus code -->
           <execution>
-            <id>gencode</id>
+            <id>process</id>
+            <goals><goal>process</goal></goals>
             <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
             <configuration>
-              <target>
-                <property name="srchdr" value="${basedir}/../etc/SOURCE_HEADER"/>
-                <javac srcdir="${project.build.sourceDirectory}" includeAntRuntime="false"
-                       source="1.6" target="1.6" encoding="utf-8">
-                  <classpath>
-                    <path refid="maven.plugin.classpath"/>
-                    <path refid="maven.compile.classpath"/>
-                  </classpath>
-                  <compilerarg value="-s"/>
-                  <compilerarg value="${project.build.sourceDirectory}"/>
-                  <compilerarg value="-processor"/>
-                  <compilerarg value="com.threerings.nexus.gencode.Processor"/>
-                  <compilerarg value="-proc:only"/>
-                  <compilerarg value="-Acom.threerings.nexus.gencode.header=${srchdr}"/>
-                  <exclude name="**/Streamer_*.java"/>
-                  <exclude name="**/Factory_*.java"/>
-                </javac>
-              </target>
+              <defaultOutputDirectory>${project.build.sourceDirectory}</defaultOutputDirectory>
+              <excludes>
+                <exclude>**/Streamer_*.java</exclude>
+                <exclude>**/Factory_*.java</exclude>
+              </excludes>
+              <processors>
+                <processor>com.threerings.nexus.gencode.Processor</processor>
+              </processors>
+              <compilerArguments>
+                -Acom.threerings.nexus.gencode.header=${basedir}/../etc/SOURCE_HEADER
+              </compilerArguments>
             </configuration>
           </execution>
         </executions>
