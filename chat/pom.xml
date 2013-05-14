@@ -57,20 +57,42 @@
 
   <build>
     <plugins>
+      <!-- handles auto-generation of Nexus code -->
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-          <fork>true</fork>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-          <!-- yes, those quoted spaces are a workaround sanctioned by the Maven idiocracy -->
-          <compilerArgument>-Xlint" "-Xlint:-serial" "-Xlint:-path</compilerArgument>
-        </configuration>
+        <groupId>org.bsc.maven</groupId>
+        <artifactId>maven-processor-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <id>process</id>
+            <goals>
+              <goal>process</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <defaultOutputDirectory>${project.build.sourceDirectory}</defaultOutputDirectory>
+              <excludes>
+                <exclude>**/Streamer_*.java</exclude>
+                <exclude>**/Factory_*.java</exclude>
+              </excludes>
+              <processors>
+                <processor>com.threerings.nexus.gencode.Processor</processor>
+              </processors>
+              <compilerArguments>
+                -Acom.threerings.nexus.gencode.header=${basedir}/etc/SOURCE_HEADER
+              </compilerArguments>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>com.threerings.nexus</groupId>
+            <artifactId>nexus-tools</artifactId>
+            <version>${nexus.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>gwt-maven-plugin</artifactId>
@@ -84,55 +106,23 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <!-- handles auto-generation of Nexus code -->
-          <execution>
-            <id>gencode</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <property name="srchdr" value="${basedir}/etc/SOURCE_HEADER"/>
-                <javac srcdir="${project.build.sourceDirectory}" includeAntRuntime="false"
-                       source="1.6" target="1.6" encoding="utf-8">
-                  <classpath>
-                    <path refid="maven.plugin.classpath"/>
-                    <path refid="maven.compile.classpath"/>
-                  </classpath>
-                  <compilerarg value="-s"/>
-                  <compilerarg value="${project.build.sourceDirectory}"/>
-                  <compilerarg value="-processor"/>
-                  <compilerarg value="com.threerings.nexus.gencode.Processor"/>
-                  <compilerarg value="-proc:only"/>
-                  <compilerarg value="-Acom.threerings.nexus.gencode.header=${srchdr}"/>
-                  <exclude name="**/Streamer_*.java"/>
-                  <exclude name="**/Factory_*.java"/>
-                </javac>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-        <dependencies>
-          <dependency>
-            <groupId>com.threerings.nexus</groupId>
-            <artifactId>nexus-tools</artifactId>
-            <version>${nexus.version}</version>
-          </dependency>
-          <!-- Maven runs Ant with the JRE as its home so we need this hackery -->
-          <dependency>
-            <groupId>com.sun</groupId>
-            <artifactId>tools</artifactId>
-            <version>1.6.0</version>
-            <scope>system</scope>
-            <systemPath>${java.home}/../lib/tools.jar</systemPath>
-          </dependency>
-        </dependencies>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+          <fork>true</fork>
+          <showDeprecation>true</showDeprecation>
+          <showWarnings>true</showWarnings>
+          <compilerArgs>
+            <arg>-Xlint</arg>
+            <arg>-Xlint:-serial</arg>
+            <arg>-Xlint:-path</arg>
+          </compilerArgs>
+        </configuration>
       </plugin>
     </plugins>
   </build>
