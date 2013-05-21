@@ -15,8 +15,9 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.threerings.gwt.ui.EnterClickAdapter;
 import com.threerings.gwt.ui.Widgets;
 
+import react.Slot;
+
 import com.threerings.nexus.distrib.Address;
-import com.threerings.nexus.util.Callback;
 
 import nexus.chat.distrib.ChatObject;
 
@@ -52,16 +53,15 @@ public class ConnectPanel extends FlowPanel
 
         // subscribe to the singleton ChatObject on the specified host; this will trigger a
         // connection to that host
-        _ctx.getClient().subscribe(
-            Address.create(address, ChatObject.class), new Callback<ChatObject>() {
-            public void onSuccess (ChatObject chatobj) {
+        _ctx.getClient().<ChatObject>subscriber().
+            subscribe(Address.create(address, ChatObject.class)).
+            onSuccess(new Slot<ChatObject>() { public void onEmit (ChatObject chatobj) {
                 // we're connected, switch to the main chat display
                 _ctx.setMainPanel(new ChatPanel(_ctx, chatobj));
-            }
-            public void onFailure (Throwable cause) {
+            }}).
+            onFailure(new Slot<Throwable>() { public void onEmit (Throwable cause) {
                 _status.setText("Failed to connect: " + cause.getMessage());
-            }
-        });
+            }});
     }
 
     protected WebContext _ctx;

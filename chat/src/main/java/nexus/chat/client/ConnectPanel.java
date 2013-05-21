@@ -12,8 +12,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import react.Slot;
+
 import com.threerings.nexus.distrib.Address;
-import com.threerings.nexus.util.Callback;
 import com.samskivert.swing.GroupLayout;
 import com.samskivert.swing.VGroupLayout;
 
@@ -60,17 +61,19 @@ public class ConnectPanel extends JPanel
 
         // subscribe to the singleton ChatObject on the specified host; this will trigger a
         // connection to that host
-        _ctx.getClient().subscribe(
-            Address.create(address, ChatObject.class), new Callback<ChatObject>() {
-            public void onSuccess (ChatObject chatobj) {
-                System.err.println("Got chat object " + chatobj);
-                // we're connected, switch to the main chat display
-                _ctx.setMainPanel(new ChatPanel(_ctx, chatobj));
-            }
-            public void onFailure (Throwable cause) {
-                _status.setText("Failed to connect: " + cause.getMessage());
-            }
-        });
+        _ctx.getClient().<ChatObject>subscriber().
+            subscribe(Address.create(address, ChatObject.class)).
+            onSuccess(new Slot<ChatObject>() {
+                public void onEmit (ChatObject chatobj) {
+                    // we're connected, switch to the main chat display
+                    _ctx.setMainPanel(new ChatPanel(_ctx, chatobj));
+                }
+            }).
+            onFailure(new Slot<Throwable>() {
+                public void onEmit (Throwable cause) {
+                    _status.setText("Failed to connect: " + cause.getMessage());
+                }
+            });
     }
 
     protected ChatContext _ctx;

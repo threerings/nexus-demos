@@ -9,7 +9,8 @@ import java.util.List;
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.DService;
 import com.threerings.nexus.distrib.NexusObject;
-import com.threerings.nexus.util.Callback;
+
+import react.RFuture;
 
 /**
  * Creates {@link ChatService} marshaller instances.
@@ -35,30 +36,28 @@ public class Factory_ChatService implements DService.Factory<ChatService>
                         return ChatService.class;
                     }
 
-                    @Override public void dispatchCall (short methodId, Object[] args) {
+                    @Override public RFuture<?> dispatchCall (short methodId, Object[] args) {
+                        RFuture<?> result = null;
                         switch (methodId) {
                         case 1:
-                            service.updateNick(
-                                this.<String>cast(args[0]),
-                                this.<Callback<Void>>cast(args[1]));
+                            result = service.updateNick(
+                                this.<String>cast(args[0]));
                             break;
                         case 2:
-                            service.getRooms(
-                                this.<Callback<List<String>>>cast(args[0]));
+                            result = service.getRooms();
                             break;
                         case 3:
-                            service.joinRoom(
-                                this.<String>cast(args[0]),
-                                this.<Callback<Address<RoomObject>>>cast(args[1]));
+                            result = service.joinRoom(
+                                this.<String>cast(args[0]));
                             break;
                         case 4:
-                            service.createRoom(
-                                this.<String>cast(args[0]),
-                                this.<Callback<Address<RoomObject>>>cast(args[1]));
+                            result = service.createRoom(
+                                this.<String>cast(args[0]));
                             break;
                         default:
-                            super.dispatchCall(methodId, args);
+                            result = super.dispatchCall(methodId, args);
                         }
+                        return result;
                     }
                 };
             }
@@ -76,17 +75,17 @@ public class Factory_ChatService implements DService.Factory<ChatService>
         @Override public Class<ChatService> getServiceClass () {
             return ChatService.class;
         }
-        @Override public void updateNick (String nickname, Callback<Void> callback) {
-            postCall((short)1, nickname, callback);
+        @Override public RFuture<Void> updateNick (String nickname) {
+            return this.<Void>postCall((short)1, nickname);
         }
-        @Override public void getRooms (Callback<List<String>> callback) {
-            postCall((short)2, callback);
+        @Override public RFuture<List<String>> getRooms () {
+            return this.<List<String>>postCall((short)2);
         }
-        @Override public void joinRoom (String name, Callback<Address<RoomObject>> callback) {
-            postCall((short)3, name, callback);
+        @Override public RFuture<Address<RoomObject>> joinRoom (String name) {
+            return this.<Address<RoomObject>>postCall((short)3, name);
         }
-        @Override public void createRoom (String name, Callback<Address<RoomObject>> callback) {
-            postCall((short)4, name, callback);
+        @Override public RFuture<Address<RoomObject>> createRoom (String name) {
+            return this.<Address<RoomObject>>postCall((short)4, name);
         }
     }
 }

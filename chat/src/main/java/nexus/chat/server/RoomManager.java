@@ -4,10 +4,11 @@
 
 package nexus.chat.server;
 
+import react.RFuture;
+
 import com.threerings.nexus.distrib.Keyed;
 import com.threerings.nexus.distrib.Nexus;
 import com.threerings.nexus.server.SessionLocal;
-import com.threerings.nexus.util.Callback;
 
 import nexus.chat.distrib.Factory_RoomService;
 import nexus.chat.distrib.RoomObject;
@@ -48,14 +49,14 @@ public class RoomManager implements RoomService, Keyed
     }
 
     // from interface RoomService
-    public void sendMessage (String message, Callback<Void> callback) {
+    public RFuture<Void> sendMessage (String message) {
         // here we might do things like access control, etc.
 
         // send the chat event to all subscribers to the room
         emitChatEvent(SessionLocal.get(Chatter.class).nickname, message);
 
         // tell the caller their chat message was sent
-        callback.onSuccess(null);
+        return RFuture.success();
     }
 
     // from interface Keyed

@@ -12,13 +12,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import react.RFuture;
 import react.UnitSlot;
 
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.Nexus;
 import com.threerings.nexus.distrib.Singleton;
 import com.threerings.nexus.server.SessionLocal;
-import com.threerings.nexus.util.Callback;
 
 import nexus.chat.distrib.ChatObject;
 import nexus.chat.distrib.ChatService;
@@ -45,34 +45,34 @@ public class ChatManager implements ChatService, Singleton
     }
 
     // from interface ChatService
-    public void updateNick (String nickname, Callback<Void> callback) {
+    public RFuture<Void> updateNick (String nickname) {
         require(!_activeNicks.contains(nickname), "The nickname '" + nickname + "' is in use.");
         require(!nickname.startsWith("{") && !nickname.toLowerCase().contains("anonymous"),
                 "Invalid nickname."); // no spoofing
 
         getChatter().updateNick(nickname);
         _activeNicks.add(nickname);
-        callback.onSuccess(null);
+        return RFuture.success();
     }
 
     // from interface ChatService
-    public void getRooms (Callback<List<String>> callback) {
-        callback.onSuccess(Lists.newArrayList(_rooms.keySet()));
+    public RFuture<List<String>> getRooms () {
+        return RFuture.<List<String>>success(Lists.newArrayList(_rooms.keySet()));
     }
 
     // from interface ChatService
-    public void joinRoom (String name, Callback<Address<RoomObject>> callback) {
+    public RFuture<Address<RoomObject>> joinRoom (String name) {
         Address<RoomObject> addr = _rooms.get(name);
         require(addr != null, "No room named '" + name + "'.");
         // here we might check invitation lists or whatnot
 
         // note that this chatter has entered this room
         getChatter().enterRoom(name);
-        callback.onSuccess(addr);
+        return RFuture.success(addr);
     }
 
     // from interface ChatService
-    public void createRoom (String name, Callback<Address<RoomObject>> callback) {
+    public RFuture<Address<RoomObject>> createRoom (String name) {
         require(!_rooms.containsKey(name), "Room already exists.");
         // here we might check privileges or whether the room name contains swear words, etc.
 
@@ -83,7 +83,7 @@ public class ChatManager implements ChatService, Singleton
 
         // note that this chatter has entered this room
         getChatter().enterRoom(name);
-        callback.onSuccess(addr);
+        return RFuture.success(addr);
     }
 
     protected Chatter getChatter () {

@@ -22,9 +22,9 @@ import com.threerings.gwt.ui.EnterClickAdapter;
 import com.threerings.gwt.ui.Widgets;
 
 import react.Slot;
+import react.UnitSlot;
 
 import com.threerings.nexus.client.Subscriber;
-import com.threerings.nexus.util.Callback;
 
 import nexus.chat.distrib.ChatObject;
 import nexus.chat.distrib.RoomObject;
@@ -66,21 +66,16 @@ public class ChatPanel extends Composite
             public void onClick (ClickEvent event) {
                 String message = _entry.getText().trim();
                 if (message.length() > 0) {
-                    _entry.setEnabled(false);
-                    _send.setEnabled(false);
-                    _roomobj.roomSvc.get().sendMessage(message, new Callback<Void>() {
-                        public void onSuccess (Void result) {
+                    _roomobj.roomSvc.get().sendMessage(message).
+                        bindComplete(new Slot<Boolean>() { public void onEmit (Boolean isComplete) {
+                            _entry.setEnabled(isComplete);
+                            _send.setEnabled(isComplete);
+                        }}).
+                        onSuccess(new UnitSlot() { public void onEmit () {
                             _entry.setText("");
-                            _entry.setEnabled(true);
                             _entry.setFocus(true);
-                            _send.setEnabled(true);
-                        }
-                        public void onFailure (Throwable cause) {
-                            feedback("Chat send failed: " + cause.getMessage());
-                            _entry.setEnabled(true);
-                            _send.setEnabled(true);
-                        }
-                    });
+                        }}).
+                        onFailure(reportFailure("Chat send failed"));
                 }
             }
         };
@@ -93,8 +88,8 @@ public class ChatPanel extends Composite
 
     protected void refreshRooms () {
         log.info("Refreshing rooms...");
-        _chatobj.chatSvc.get().getRooms(callback(new Action<List<String>>() {
-            public void onSuccess (final List<String> rooms) {
+        _chatobj.chatSvc.get().getRooms().onSuccess(new Slot<List<String>>() {
+            public void onEmit (final List<String> rooms) {
                 _rooms.clear();
                 log.info("Refreshing rooms UI " + rooms);
                 for (final String room : rooms) {
@@ -110,18 +105,16 @@ public class ChatPanel extends Composite
                     _rooms.add(Widgets.newHTML("&nbsp;", "inline"));
                 }
             }
-        }, "Failed to fetch rooms"));
+        }).onFailure(reportFailure("Failed to fetch rooms"));
     }
 
     protected void updateNickname (final String nickname) {
         if (nickname.length() == 0) {
             feedback("Error: can't use blank nickname");
         } else {
-            _chatobj.chatSvc.get().updateNick(nickname, callback(new Action<Void>() {
-                public void onSuccess (Void result) {
-                    feedback("Nickname updated to '" + nickname + "'.");
-                }
-            }, "Failed to update nickname"));
+            _chatobj.chatSvc.get().updateNick(nickname).onSuccess(new UnitSlot() {
+                public void onEmit () { feedback("Nickname updated to '" + nickname + "'."); }
+            }).onFailure(reportFailure("Failed to update nickname"));
         }
     }
 
@@ -129,47 +122,42 @@ public class ChatPanel extends Composite
         if (_roomobj != null && _roomobj.name.equals(name)) {
             return; // no point in noopin'
         }
-        Action<RoomObject> onJoin = new Action<RoomObject>() {
-            public void onSuccess (RoomObject room) {
-                joinedRoom(room);
-            }
-        };
-        _chatobj.chatSvc.get().joinRoom(
-            name, _ctx.getClient().subscriber(
-                callback(onJoin, "Failed to join room '" + name + "'")));
+        if (_sub != null) _sub.unsubscribe();
+        _chatobj.chatSvc.get().joinRoom(name).
+            flatMap(_sub = _ctx.getClient().subscriber()).
+            onSuccess(joinedRoom).
+            onFailure(reportFailure("Failed to join room '" + name + "'"));
     }
 
     protected void createRoom (final String name) {
-        Action<RoomObject> onCreate = new Action<RoomObject>() {
-            public void onSuccess (RoomObject room) {
-                joinedRoom(room);
-            }
-        };
         if (_sub != null) _sub.unsubscribe();
-        _sub = _ctx.getClient().subscriber(
-            callback(onCreate, "Failed to create room '" + name + "'"));
-        _chatobj.chatSvc.get().createRoom(name, _sub);
+        _chatobj.chatSvc.get().createRoom(name).
+            flatMap(_sub = _ctx.getClient().subscriber()).
+            onSuccess(joinedRoom).
+            onFailure(reportFailure("Failed to create room '" + name + "'"));
     }
 
-    protected void joinedRoom (RoomObject room) {
-        log.info("Joined room " + room.name);
-        _roomobj = room;
-        _roomobj.chatEvent.connect(new Slot<RoomObject.ChatEvent>() {
-            public void onEmit (RoomObject.ChatEvent event) {
-                if (event.nickname == null) {
-                    appendLine(event.message); // from the server
-                } else {
-                    appendLine("<" + event.nickname + "> " + event.message);
+    protected final Slot<RoomObject> joinedRoom = new Slot<RoomObject>() {
+        public void onEmit (RoomObject room) {
+            log.info("Joined room " + room.name);
+            _roomobj = room;
+            _roomobj.chatEvent.connect(new Slot<RoomObject.ChatEvent>() {
+                public void onEmit (RoomObject.ChatEvent event) {
+                    if (event.nickname == null) {
+                        appendLine(event.message); // from the server
+                    } else {
+                        appendLine("<" + event.nickname + "> " + event.message);
+                    }
                 }
-            }
-        });
-        feedback("Joined room '" + room.name + "'");
-        _entry.setEnabled(true);
-        _entry.setFocus(true);
+            });
+            feedback("Joined room '" + room.name + "'");
+            _entry.setEnabled(true);
+            _entry.setFocus(true);
 
-        // refresh our rooms list, as that will update the rooms UI to show that we're in this room
-        refreshRooms();
-    }
+            // refresh our rooms list, that will update the rooms UI to show that we're in this room
+            refreshRooms();
+        }
+    };
 
     protected void feedback (String message) {
         appendLine(message);
@@ -179,19 +167,10 @@ public class ChatPanel extends Composite
         _chat.add(Widgets.newLabel(line));
     }
 
-    protected <T> Callback<T> callback (final Action<T> action, final String errpre) {
-        return new Callback<T>() {
-            public void onSuccess (T result) {
-                action.onSuccess(result);
-            }
-            public void onFailure (Throwable cause) {
-                feedback(errpre + ": " + cause.getMessage());
-            }
-        };
-    }
-
-    protected interface Action<T> {
-        void onSuccess (T result);
+    protected Slot<Throwable> reportFailure (final String errpre) {
+        return new Slot<Throwable>() { public void onEmit (Throwable cause) {
+            feedback(errpre + ": " + cause.getMessage());
+        }};
     }
 
     protected interface Styles extends CssResource {
