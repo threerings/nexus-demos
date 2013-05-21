@@ -7,9 +7,9 @@ package com.threerings.reversi.core.lobby;
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.DService;
 import com.threerings.nexus.distrib.NexusObject;
-import com.threerings.nexus.util.Callback;
 
 import com.threerings.reversi.core.game.GameObject;
+import react.RFuture;
 
 /**
  * Creates {@link LobbyService} marshaller instances.
@@ -35,31 +35,30 @@ public class Factory_LobbyService implements DService.Factory<LobbyService>
                         return LobbyService.class;
                     }
 
-                    @Override public void dispatchCall (short methodId, Object[] args) {
+                    @Override public RFuture<?> dispatchCall (short methodId, Object[] args) {
+                        RFuture<?> result = null;
                         switch (methodId) {
                         case 1:
-                            service.hello(
-                                this.<Callback<String>>cast(args[0]));
+                            result = service.hello();
                             break;
                         case 2:
-                            service.updateNick(
-                                this.<String>cast(args[0]),
-                                this.<Callback<Void>>cast(args[1]));
+                            result = service.updateNick(
+                                this.<String>cast(args[0]));
                             break;
                         case 3:
                             service.chat(
                                 this.<String>cast(args[0]));
                             break;
                         case 4:
-                            service.play(
-                                this.<Callback<Address<GameObject>>>cast(args[0]));
+                            result = service.play();
                             break;
                         case 5:
                             service.cancel();
                             break;
                         default:
-                            super.dispatchCall(methodId, args);
+                            result = super.dispatchCall(methodId, args);
                         }
+                        return result;
                     }
                 };
             }
@@ -77,20 +76,20 @@ public class Factory_LobbyService implements DService.Factory<LobbyService>
         @Override public Class<LobbyService> getServiceClass () {
             return LobbyService.class;
         }
-        @Override public void hello (Callback<String> callback) {
-            postCall((short)1, callback);
+        @Override public RFuture<String> hello () {
+            return this.<String>postCall((short)1);
         }
-        @Override public void updateNick (String nickname, Callback<Void> callback) {
-            postCall((short)2, nickname, callback);
+        @Override public RFuture<Void> updateNick (String nickname) {
+            return this.<Void>postCall((short)2, nickname);
         }
         @Override public void chat (String message) {
-            postCall((short)3, message);
+            postVoidCall((short)3, message);
         }
-        @Override public void play (Callback<Address<GameObject>> callback) {
-            postCall((short)4, callback);
+        @Override public RFuture<Address<GameObject>> play () {
+            return this.<Address<GameObject>>postCall((short)4);
         }
         @Override public void cancel () {
-            postCall((short)5);
+            postVoidCall((short)5);
         }
     }
 }

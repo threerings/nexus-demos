@@ -5,11 +5,10 @@
 package com.threerings.reversi.core.chat;
 
 import playn.core.Keyboard;
+import playn.core.util.Callback;
 import static playn.core.PlayN.keyboard;
 
 import tripleplay.ui.Button;
-
-import com.threerings.reversi.core.PCallback;
 
 public abstract class ChatButton extends Button {
 
@@ -23,10 +22,11 @@ public abstract class ChatButton extends Button {
 
   protected abstract void sendChat (String msg);
 
-  protected final PCallback<String> gotChat = new PCallback<String>() {
+  protected final Callback<String> gotChat = new Callback<String>() {
     public void onSuccess (final String msg) {
       if (msg == null || msg.length() == 0) return;
       sendChat(msg);
     }
+    public void onFailure (Throwable cause) {} // can't happen
   };
 }

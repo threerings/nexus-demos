@@ -15,7 +15,6 @@
 
   <properties>
     <mainClass>com.threerings.reversi.server.ReversiServer</mainClass>
-    <jetty.version>7.6.9.v20130131</jetty.version>
   </properties>
 
   <dependencies>
@@ -35,18 +34,6 @@
       <groupId>com.threerings.nexus</groupId>
       <artifactId>nexus-gwt-server</artifactId>
       <version>${nexus.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
-      <version>${jetty.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-websocket</artifactId>
-      <version>${jetty.version}</version>
     </dependency>
   </dependencies>
 

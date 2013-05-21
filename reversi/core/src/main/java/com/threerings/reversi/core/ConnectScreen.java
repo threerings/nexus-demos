@@ -4,10 +4,10 @@
 
 package com.threerings.reversi.core;
 
+import react.Slot;
 import react.UnitSlot;
 
 import com.threerings.nexus.distrib.Address;
-import com.threerings.nexus.util.Callback;
 import com.threerings.reversi.core.lobby.LobbyObject;
 import com.threerings.reversi.core.lobby.LobbyScreen;
 
@@ -26,19 +26,21 @@ public class ConnectScreen extends AbstractScreen {
 
     UnitSlot onConnect = new UnitSlot() { public void onEmit () {
       status.text.update("Connecting...");
-      _game.nexus.subscribe(Address.create("localhost", LobbyObject.class),
-                            new Callback<LobbyObject>() {
-                              public void onSuccess (LobbyObject obj) {
-                                obj.onLost.connect(new UnitSlot() { public void onEmit () {
-                                  _showStatus = "Lost connection.";
-                                  _game.screens.popTo(ConnectScreen.this);
-                                }});
-                                _game.screens.push(new LobbyScreen(_game, obj));
-                              }
-                              public void onFailure (Throwable cause) {
-                                status.text.update("Connect failed: " + cause.getMessage());
-                              }
-                            });
+      _game.nexus.<LobbyObject>subscriber().
+          subscribe(Address.create("localhost", LobbyObject.class)).
+          onSuccess(new Slot<LobbyObject>() {
+              public void onEmit (LobbyObject obj) {
+                  obj.onLost.connect(new UnitSlot() { public void onEmit () {
+                      _showStatus = "Lost connection.";
+                      _game.screens.popTo(ConnectScreen.this);
+                  }});
+                  _game.screens.push(new LobbyScreen(_game, obj));
+              }
+          }).onFailure(new Slot<Throwable>() {
+              public void onEmit (Throwable cause) {
+                  status.text.update("Connect failed: " + cause.getMessage());
+              }
+          });
     }};
 
     Button connect = new Button("Connect");

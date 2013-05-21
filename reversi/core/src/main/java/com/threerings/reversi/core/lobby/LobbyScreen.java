@@ -4,12 +4,15 @@
 
 package com.threerings.reversi.core.lobby;
 
+import react.Functions;
 import react.Slot;
 import react.Value;
 
 import playn.core.Keyboard;
+import playn.core.util.Callback;
 import static playn.core.PlayN.keyboard;
 
+import com.threerings.nexus.client.Subscriber;
 import com.threerings.nexus.distrib.Address;
 
 import tripleplay.ui.Background;
@@ -24,8 +27,6 @@ import tripleplay.ui.ValueLabel;
 import tripleplay.ui.layout.AxisLayout;
 
 import com.threerings.reversi.core.AbstractScreen;
-import com.threerings.reversi.core.NCallback;
-import com.threerings.reversi.core.PCallback;
 import com.threerings.reversi.core.Reversi;
 import com.threerings.reversi.core.UI;
 import com.threerings.reversi.core.chat.ChatButton;
@@ -39,11 +40,7 @@ public class LobbyScreen extends AbstractScreen {
     super(game);
     _obj = obj;
     // let the lobby know that we're here
-    obj.lobbySvc.get().hello(new NCallback<String>() {
-      public void onSuccess (String nickname) {
-        _nickname.update(nickname);
-      }
-    });
+    obj.lobbySvc.get().hello().onSuccess(_nickname.slot());
   }
 
   @Override protected Layout layout () {
@@ -65,7 +62,12 @@ public class LobbyScreen extends AbstractScreen {
         new Button("Play") {
           public void click () {
             if (!_pending) {
-              _obj.lobbySvc.get().play(onPlay);
+              final Subscriber<GameObject> sub = _game.nexus.subscriber();
+              _obj.lobbySvc.get().play().flatMap(sub).onSuccess(new Slot<GameObject>() {
+                  public void onEmit (GameObject obj) {
+                      _game.screens.push(new GameScreen(_game, sub, obj));
+                  }
+              });
               text.update("Cancel");
             } else {
               _obj.lobbySvc.get().cancel();
@@ -82,26 +84,13 @@ public class LobbyScreen extends AbstractScreen {
         }));
   }
 
-  protected final PCallback<String> gotNick = new PCallback<String>() {
+  protected final Callback<String> gotNick = new Callback<String>() {
     public void onSuccess (final String newnick) {
       if (newnick == null || newnick.length() == 0 || _nickname.get().equals(newnick)) return;
-      _obj.lobbySvc.get().updateNick(newnick, new NCallback.Unit() {
-        public void onSuccess () {
-          _nickname.update(newnick);
-        }
-      });
+      _obj.lobbySvc.get().updateNick(newnick).map(
+          Functions.constant(newnick)).onSuccess(_nickname.slot());
     }
-  };
-
-  protected final NCallback<Address<GameObject>> onPlay = new NCallback<Address<GameObject>>() {
-    public void onSuccess (Address<GameObject> addr) {
-      // ignore null addrs, we get those if we request to play and then cancel
-      if (addr != null) _game.nexus.subscribe(addr, new NCallback<GameObject>() {
-        public void onSuccess (GameObject obj) {
-          _game.screens.push(new GameScreen(_game, obj));
-        }
-      });
-    }
+    public void onFailure (Throwable cause) {} // can't happen
   };
 
   protected final LobbyObject _obj;

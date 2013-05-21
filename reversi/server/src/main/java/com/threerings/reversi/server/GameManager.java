@@ -10,14 +10,13 @@ import java.util.Map;
 import java.util.Set;
 
 import react.Functions;
+import react.RFuture;
 import react.Slot;
-
-import tripleplay.util.Logger;
 
 import com.threerings.nexus.distrib.Keyed;
 import com.threerings.nexus.distrib.Nexus;
+import com.threerings.nexus.distrib.NexusException;
 import com.threerings.nexus.server.SessionLocal;
-import com.threerings.nexus.util.Callback;
 
 import com.threerings.reversi.core.chat.ChatMessage;
 import com.threerings.reversi.core.game.Board;
@@ -36,7 +35,6 @@ public class GameManager implements GameService, Keyed {
   public GameManager (Nexus nexus, Integer gameId, Player[] players) {
     this.gameId = gameId;
     _nexus = nexus;
-    _log = new Logger("game:" + gameId);
 
     String[] pnames = new String[players.length];
     for (int ii = 0; ii < players.length; ii++) {
@@ -61,24 +59,16 @@ public class GameManager implements GameService, Keyed {
     return gameId;
   }
 
-  @Override public void readyToPlay (Callback<Integer> callback) {
+  @Override public RFuture<Integer> readyToPlay () {
     Player player = SessionLocal.get(Player.class);
-    if (gameObj.state.get() != GameObject.State.PRE_GAME) {
-      _log.warning("Got readyToPlay, but it's not pre-game", "from", player);
-      return;
-    }
+    NexusException.require(gameObj.state.get() == GameObject.State.PRE_GAME,
+                           "Got readyToPlay, but it's not pre-game", "from", player);
     int idx = index(player);
-    if (idx == -1) {
-      _log.warning("Got readyToPlay from non-player", "from", player);
-      return;
-    }
+    NexusException.require(idx != -1, "Got readyToPlay from non-player", "from", player);
 
     // if this player disconnects before leaving normally, clear them out
     SessionLocal.getSession().onDisconnect().map(Functions.constant(player)).
       connect(playerLeft).holdWeakly();
-
-    // let the player know their index
-    callback.onSuccess(idx);
 
     // note that they're ready to play and maybe start the game
     _here.add(player);
@@ -91,20 +81,22 @@ public class GameManager implements GameService, Keyed {
       gameObj.board.put(new Coord(mid, mid), 0);
       gameObj.state.update(GameObject.State.IN_PLAY);
     }
+
+    // let the player know their index
+    return RFuture.success(idx);
   }
 
   @Override public void play (Coord coord) {
+    // make sure the requester is the current turn holder
     int thIdx = gameObj.turnHolder.get();
     Player player = SessionLocal.get(Player.class);
-    if (thIdx < 0 || index(player) != thIdx) {
-      _log.warning("Got play from non-turnholder", "from", player, "at", coord, "th", thIdx);
-      return;
-    }
+    NexusException.require(thIdx >= 0 && index(player) == thIdx,
+                           "Got play from non-turnholder", "from", player, "at", coord, "th", thIdx);
+
     // double check that the play is legal (the client also checks)
-    if (!Logic.isLegalPlay(gameObj.board, thIdx, coord)) {
-      _log.warning("Got illegal play request", "from", player, "at", coord, "board", gameObj.board);
-      return;
-    }
+    NexusException.require(Logic.isLegalPlay(gameObj.board, thIdx, coord),
+                           "Got illegal play request", "from", player, "at", coord,
+                           "board", gameObj.board);
 
     // apply the play, flipping the appropriate tiles
     gameObj.board.put(coord, thIdx);
@@ -147,8 +139,9 @@ public class GameManager implements GameService, Keyed {
 
   @Override public void byebye () {
     Player player = SessionLocal.get(Player.class);
-    if (_players.containsKey(player)) playerLeft.onEmit(player);
-    else _log.warning("Got byebye from non-player?", "from", player);
+    NexusException.require(_players.containsKey(player), "Got byebye from non-player?",
+                           "game", gameId, "from", player);
+    playerLeft.onEmit(player);
   }
 
   protected void sendSysMsg (String message) {
@@ -167,7 +160,6 @@ public class GameManager implements GameService, Keyed {
   }};
 
   protected final Nexus _nexus;
-  protected final Logger _log;
   protected final Map<Player,Integer> _players = new HashMap<Player,Integer>();
   protected final Set<Player> _here = new HashSet<Player>();
 }

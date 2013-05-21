@@ -4,14 +4,15 @@
 
 package com.threerings.reversi.server;
 
+import react.RFuture;
+import react.RPromise;
 import react.UnitSlot;
-import tripleplay.util.Logger;
 
 import com.threerings.nexus.distrib.Address;
 import com.threerings.nexus.distrib.Nexus;
+import com.threerings.nexus.distrib.NexusException;
 import com.threerings.nexus.distrib.Singleton;
 import com.threerings.nexus.server.SessionLocal;
-import com.threerings.nexus.util.Callback;
 
 import com.threerings.reversi.core.chat.ChatMessage;
 import com.threerings.reversi.core.game.GameObject;
@@ -34,7 +35,7 @@ public class LobbyManager implements LobbyService, Singleton {
     _lobj.onChat.emit(new ChatMessage(null, message));
   }
 
-  @Override public void hello (Callback<String> callback) {
+  @Override public RFuture<String> hello () {
     // create this player's Player object and assign them a nick
     final Player player = new Player(_nexus, "player" + (++_nextPlayerNo));
     SessionLocal.set(Player.class, player);
@@ -47,16 +48,16 @@ public class LobbyManager implements LobbyService, Singleton {
     });
 
     // let the player know their auto-assigned nickname
-    callback.onSuccess(player.nickname);
     sendSysMsg(player.nickname + " logged on.");
+    return RFuture.success(player.nickname);
   }
 
-  @Override public void updateNick (String newnick, Callback<Void> callback) {
+  @Override public RFuture<Void> updateNick (String newnick) {
     Player player = SessionLocal.get(Player.class);
     String onickname = player.nickname;
     player.nickname = newnick;
     sendSysMsg("<" + onickname + "> is now known as <" + newnick + ">");
-    callback.onSuccess(null);
+    return RFuture.success();
   }
 
   @Override public void chat (String message) {
@@ -64,44 +65,42 @@ public class LobbyManager implements LobbyService, Singleton {
     _lobj.onChat.emit(new ChatMessage(speaker, message));
   }
 
-  @Override public void play (Callback<Address<GameObject>> callback) {
+  @Override public RFuture<Address<GameObject>> play () {
     Player player = SessionLocal.get(Player.class);
-    if (_waiter == player) {
-      _log.warning("Got play from already waiting player?", "who", player);
-      return;
-    }
-    if (_waiter != null) {
-      GameManager gmgr = new GameManager(_nexus, ++_nextGameId, new Player[] { _waiter, player });
-      _waiterCallback.onSuccess(Address.of(gmgr.gameObj));
-      callback.onSuccess(Address.of(gmgr.gameObj));
-      sendSysMsg(_waiter.nickname + " and " + player.nickname + " have started a game.");
-      _waiter = null;
-      _waiterCallback = null;
-    } else {
+    NexusException.require(_waiter != player,
+                           "Got play from already waiting player?", "who", player);
+
+    // if no one is already waiting, queue this player up as a waiter
+    if (_waiter == null) {
       sendSysMsg(player.nickname + " is ready to play.");
       _waiter = player;
-      _waiterCallback = callback;
+      return _waiterResult = RPromise.create();
     }
+
+    GameManager gmgr = new GameManager(_nexus, ++_nextGameId, new Player[] { _waiter, player });
+    _waiterResult.succeed(Address.of(gmgr.gameObj));
+    _waiterResult = null;
+    sendSysMsg(_waiter.nickname + " and " + player.nickname + " have started a game.");
+    _waiter = null;
+    return RFuture.success(Address.of(gmgr.gameObj));
   }
 
   @Override public void cancel () {
     Player player = SessionLocal.get(Player.class);
-    if (_waiter != player) {
-      _log.warning("Got cancel from non-waiting player?", "who", player);
-      return;
-    }
+    NexusException.require(_waiter == player,
+                           "Got cancel from non-waiting player?", "who", player);
+
     sendSysMsg(player.nickname + " has decided not to play.");
-    _waiterCallback.onSuccess(null);
+    _waiterResult.fail(new NexusException("canceled"));
     _waiter = null;
-    _waiterCallback = null;
+    _waiterResult = null;
   }
 
-  protected final Logger _log = new Logger("lobby");
   protected final Nexus _nexus;
   protected final LobbyObject _lobj = new LobbyObject(Factory_LobbyService.createDispatcher(this));
 
   protected int _nextPlayerNo = 0;
   protected int _nextGameId = 0;
   protected Player _waiter;
-  protected Callback<Address<GameObject>> _waiterCallback;
+  protected RPromise<Address<GameObject>> _waiterResult;
 }

@@ -4,14 +4,15 @@
 
 package com.threerings.reversi.core.game;
 
+import react.RFuture;
+
 import com.threerings.nexus.distrib.NexusService;
-import com.threerings.nexus.util.Callback;
 
 /** Defines actions taken by player in a game. */
 public interface GameService extends NexusService {
 
   /** Lets the server know that we're here and ready to go. */
-  void readyToPlay (Callback<Integer> callback);
+  RFuture<Integer> readyToPlay ();
 
   /** Requests to make our move at the specified coordinates. */
   void play (Coord coord);

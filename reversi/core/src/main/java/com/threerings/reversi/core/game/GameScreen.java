@@ -21,8 +21,8 @@ import tripleplay.ui.ValueLabel;
 import tripleplay.ui.layout.AxisLayout;
 import tripleplay.ui.layout.TableLayout;
 
+import com.threerings.nexus.client.Subscriber;
 import com.threerings.reversi.core.AbstractScreen;
-import com.threerings.reversi.core.NCallback;
 import com.threerings.reversi.core.Reversi;
 import com.threerings.reversi.core.UI;
 import com.threerings.reversi.core.chat.ChatButton;
@@ -32,8 +32,9 @@ public class GameScreen extends AbstractScreen {
 
   public final GameObject obj;
 
-  public GameScreen (Reversi game, GameObject obj) {
+  public GameScreen (Reversi game, Subscriber<GameObject> sub, GameObject obj) {
     super(game);
+    _sub = sub;
     this.obj = obj;
   }
 
@@ -41,6 +42,11 @@ public class GameScreen extends AbstractScreen {
     if (obj.turnHolder.get() == _ourIdx && Logic.isLegalPlay(obj.board, _ourIdx, coord)) {
       obj.svc.get().play(coord);
     }
+  }
+
+  @Override public void wasRemoved () {
+      super.wasRemoved();
+      _sub.unsubscribe();
   }
 
   @Override protected Layout layout () {
@@ -62,10 +68,10 @@ public class GameScreen extends AbstractScreen {
     root.add(new Group(AxisLayout.vertical()).add(new BoardView(this)),
              AxisLayout.stretch(info));
 
-    obj.svc.get().readyToPlay(new NCallback<Integer>() {
-      public void onSuccess (Integer ourIdx) {
-        _ourIdx = ourIdx;
-      }
+    obj.svc.get().readyToPlay().onSuccess(new Slot<Integer>() {
+        public void onEmit (Integer ourIdx) {
+            _ourIdx = ourIdx;
+        }
     });
   }
 
@@ -85,4 +91,5 @@ public class GameScreen extends AbstractScreen {
   }
 
   protected int _ourIdx;
+  protected final Subscriber<GameObject> _sub;
 }
