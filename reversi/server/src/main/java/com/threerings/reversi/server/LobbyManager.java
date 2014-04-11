@@ -26,9 +26,9 @@ public class LobbyManager implements LobbyService, Singleton {
   public LobbyManager (Nexus nexus) {
     _nexus = nexus;
     // register ourselves as a singleton
-    nexus.registerSingleton(this);
+    Nexus.Context<LobbyManager> ctx = nexus.register(LobbyManager.class, this);
     // register our lobby object as a child singleton in our same context
-    nexus.registerSingleton(_lobj, this);
+    nexus.register(LobbyObject.class, _lobj, ctx);
   }
 
   public void sendSysMsg (String message) {

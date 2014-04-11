@@ -6,6 +6,7 @@ package com.threerings.reversi.core.lobby;
 
 import react.Functions;
 import react.Slot;
+import react.UnitSlot;
 import react.Value;
 
 import playn.core.Keyboard;
@@ -48,40 +49,42 @@ public class LobbyScreen extends AbstractScreen {
   }
 
   @Override protected void createIface (Root root) {
+    final Button play;
     _root.add(
       UI.headerLabel("Lobby"),
       new Group(AxisLayout.horizontal()).add(
         new Label("Nickname:"),
         new ValueLabel(_nickname),
-        new Button("Change") { public void click () {
+        new Button("Change").onClick(new UnitSlot() { public void onEmit () {
           keyboard().getText(Keyboard.TextType.DEFAULT, "New nickname:",
                              _nickname.get(), gotNick);
-        }},
+        }}),
         new Shim(20, 1),
         new Label("Play:"),
-        new Button("Play") {
-          public void click () {
-            if (!_pending) {
-              final Subscriber<GameObject> sub = _game.nexus.subscriber();
-              _obj.lobbySvc.get().play().flatMap(sub).onSuccess(new Slot<GameObject>() {
-                  public void onEmit (GameObject obj) {
-                      _game.screens.push(new GameScreen(_game, sub, obj));
-                  }
-              });
-              text.update("Cancel");
-            } else {
-              _obj.lobbySvc.get().cancel();
-              text.update("Play");
-            }
-            _pending = !_pending;
-          }
-          protected boolean _pending;
-        }),
+        play = new Button("Play")),
       AxisLayout.stretch((Group)new ChatView(_obj.onChat, _conns)),
       new Group(AxisLayout.horizontal(), Style.HALIGN.right).add(
         new ChatButton() {
           protected void sendChat (String msg) { _obj.lobbySvc.get().chat(msg); }
         }));
+    play.onClick(new UnitSlot() {
+      public void onEmit () {
+        if (!_pending) {
+          final Subscriber<GameObject> sub = _game.nexus.subscriber();
+          _obj.lobbySvc.get().play().flatMap(sub).onSuccess(new Slot<GameObject>() {
+            public void onEmit (GameObject obj) {
+              _game.screens.push(new GameScreen(_game, sub, obj));
+            }
+          });
+          play.text.update("Cancel");
+        } else {
+          _obj.lobbySvc.get().cancel();
+          play.text.update("Play");
+        }
+        _pending = !_pending;
+      }
+      protected boolean _pending;
+    });
   }
 
   protected final Callback<String> gotNick = new Callback<String>() {

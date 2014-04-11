@@ -18,6 +18,7 @@ import playn.core.Pointer;
 import playn.core.Surface;
 import static playn.core.PlayN.graphics;
 
+import tripleplay.ui.Behavior;
 import tripleplay.ui.SizableWidget;
 
 /** Displays the game board and handles basic interaction. */
@@ -27,7 +28,6 @@ public class BoardView extends SizableWidget<BoardView> {
 
   public BoardView (GameScreen game) {
     super(SQ_SIZE*Board.SIZE, SQ_SIZE*Board.SIZE);
-    enableInteraction();
     _game = game;
 
     // add an immediate layer that draws our board
@@ -62,8 +62,13 @@ public class BoardView extends SizableWidget<BoardView> {
     return BoardView.class;
   }
 
-  @Override protected void onPointerStart (Pointer.Event event, float x, float y) {
-    _game.tileClicked(new Coord(MathUtil.ifloor(x / SQ_SIZE), MathUtil.ifloor(y / SQ_SIZE)));
+  @Override protected Behavior<BoardView> createBehavior () {
+    return new Behavior.Ignore<BoardView>(this) {
+      @Override protected void onPress (Pointer.Event event) {
+        float x = event.localX(), y = event.localY();
+        _game.tileClicked(new Coord(MathUtil.ifloor(x / SQ_SIZE), MathUtil.ifloor(y / SQ_SIZE)));
+      }
+    };
   }
 
   protected ImageLayer addChip (Coord coord) {

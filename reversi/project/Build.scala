@@ -5,38 +5,27 @@
 import sbt.Keys._
 import sbt._
 
-object ReversiBuild extends Build {
+object ReversiBuild extends samskivert.MavenBuild {
   import spray.revolver.RevolverPlugin.Revolver
 
-  val builder = new samskivert.ProjectBuilder("pom.xml") {
-    override val globalSettings = Seq(
-      crossPaths    := false,
-      javacOptions  ++= Seq("-Xlint", "-Xlint:-serial", "-source", "1.6", "-target", "1.6"),
-      javaOptions   ++= Seq("-ea"),
-      // "-Xdebug", "-Xrunjdwp:transport=dt_socket,address=127.0.0.1:8888,server=y,suspend=y"),
-      fork in Compile := true,
-      autoScalaLibrary in Compile := false // no scala-library dependency (except for tests)
+  override val globalSettings = Seq(
+    crossPaths    := false,
+    javacOptions  ++= Seq("-Xlint", "-Xlint:-serial", "-source", "1.6", "-target", "1.6"),
+    javaOptions   ++= Seq("-ea"),
+    // "-Xdebug", "-Xrunjdwp:transport=dt_socket,address=127.0.0.1:8888,server=y,suspend=y"),
+    fork in Compile := true,
+    autoScalaLibrary in Compile := false, // no scala-library dependency (except for tests)
+    libraryDependencies += "com.novocode" % "junit-interface" % "0.10" % "test->default",
+    testOptions += Tests.Argument(TestFrameworks.JUnit, "-a", "-v")
+  )
+
+  override def moduleSettings (name :String, pom :pomutil.POM) = name match {
+    case "java" => Revolver.settings
+    case "server" => Revolver.settings ++ seq(
+      fork in Test := true
     )
-    override def projectSettings (name :String, pom :pomutil.POM) = name match {
-      case "core" => seq(
-        libraryDependencies ++= Seq(
-          // scala test dependencies
-          "com.novocode" % "junit-interface" % "0.7" % "test->default"
-        )
-      )
-      case "java" => Revolver.settings ++ LWJGLPlugin.lwjglSettings
-      case "server" => Revolver.settings ++ seq(
-        fork in Test := true
-      )
-      case _ => Nil
-    }
+    case _ => Nil
   }
 
-  lazy val assets = builder("assets")
-  lazy val core   = builder("core")
-  lazy val java   = builder("java")
-  lazy val server = builder("server")
-
-  // one giant fruit roll-up to bring them all together
-  lazy val d11s = Project("reversi", file(".")) aggregate(assets, core, java, server)
+  override def profiles = Seq("java", "android", "html", "server")
 }

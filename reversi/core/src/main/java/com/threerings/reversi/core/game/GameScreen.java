@@ -6,6 +6,7 @@ package com.threerings.reversi.core.game;
 
 import react.Function;
 import react.Slot;
+import react.UnitSlot;
 
 import static playn.core.PlayN.graphics;
 
@@ -63,7 +64,7 @@ public class GameScreen extends AbstractScreen {
       AxisLayout.stretch((Group)new ChatView(obj.onChat, _conns)),
       new Group(AxisLayout.horizontal(), Style.HALIGN.right).add(
         new ChatButton() { protected void sendChat (String msg) { obj.svc.get().chat(msg); }},
-        new Button("Quit") { public void click () { onQuit(); }}));
+        new Button("Quit").onClick(new UnitSlot() { public void onEmit () {onQuit(); }})));
 
     root.add(new Group(AxisLayout.vertical()).add(new BoardView(this)),
              AxisLayout.stretch(info));

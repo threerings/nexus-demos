@@ -8,16 +8,16 @@ import playn.core.Keyboard;
 import playn.core.util.Callback;
 import static playn.core.PlayN.keyboard;
 
+import react.UnitSlot;
 import tripleplay.ui.Button;
 
 public abstract class ChatButton extends Button {
 
   public ChatButton () {
     super("Chat");
-  }
-
-  @Override public void click () {
-    keyboard().getText(Keyboard.TextType.DEFAULT, "Enter message:", "", gotChat);
+    onClick(new UnitSlot() { public void onEmit () {
+      keyboard().getText(Keyboard.TextType.DEFAULT, "Enter message:", "", gotChat);
+    }});
   }
 
   protected abstract void sendChat (String msg);

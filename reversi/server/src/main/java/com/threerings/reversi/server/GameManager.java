@@ -43,16 +43,16 @@ public class GameManager implements GameService, Keyed {
     }
 
     // register ourselves as a keyed entity
-    nexus.registerKeyed(this);
+    Nexus.Context<GameManager> ctx = nexus.registerKeyed(GameManager.class, this);
     // create and register our game object as an anonymous child in our same context
     this.gameObj = new GameObject(pnames, Factory_GameService.createDispatcher(this));
-    nexus.register(gameObj, this);
+    nexus.register(gameObj, ctx);
   }
 
   public void shutdown () {
     if (gameObj.getId() == 0) return; // we already shutdown
     _nexus.clear(gameObj);
-    _nexus.clearKeyed(this);
+    _nexus.clearKeyed(GameManager.class, this);
   }
 
   @Override public Comparable<?> getKey () {
